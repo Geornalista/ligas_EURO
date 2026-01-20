@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1b2a">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparativo Europeu v2</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<style>
+:root{
+  --bg:#0d1b2a;
+  --card:#1b263b;
+  --accent:#00aaff;
+  --text:#e0e1dd;
+  --muted:#9aa4b2;
+  --good:#00ff88;
+}
+
+[data-theme="light"]{
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --accent:#005fcc;
+  --text:#1b263b;
+  --muted:#555;
+  --good:#00aa55;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+header{
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid rgba(0,0,0,.1);
+}
+
+header h1{
+  margin:0;
+  font-size:1.2rem;
+  color:var(--accent);
+}
+
+.controls{
+  padding:12px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+select,button{
+  padding:10px 12px;
+  border-radius:10px;
+  border:none;
+  background:var(--card);
+  color:var(--text);
+  font-size:.95rem;
+  cursor:pointer;
+}
+
+.section{padding:12px}
+
+.card{
+  background:var(--card);
+  border-radius:14px;
+  padding:14px;
+}
+
+.bar-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 0;
+  cursor:pointer;
+}
+
+.bar-label{width:140px;font-size:.9rem}
+.bar{flex:1;height:12px;background:rgba(0,0,0,.15);border-radius:6px}
+.bar-fill{height:100%;border-radius:6px;background:var(--accent)}
+.bar-value{width:60px;text-align:right;font-weight:600}
+
+.drawer{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  background:var(--card);
+  border-radius:18px 18px 0 0;
+  padding:16px;
+  transform:translateY(100%);
+  transition:.3s;
+}
+
+.drawer.active{transform:translateY(0)}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  display:none;
+}
+
+.overlay.active{display:block}
+</style>
+</head>
+
+<body data-theme="dark">
+
+<header>
+  <h1>Comparativo Europeu</h1>
+  <button onclick="alternarTema()">🌓</button>
+</header>
+
+<div class="controls">
+  <select id="metrica">
+    <option value="mediaGols">Média de gols</option>
+    <option value="vitoriasMandante">Vitórias do mandante</option>
+    <option value="vitoriasVisitante">Vitórias do visitante</option>
+    <option value="empates">Empates</option>
+    <option value="zeroZero">Jogos 0x0</option>
+  </select>
+
+  <select id="periodo">
+    <option value="FT">Tempo regulamentar</option>
+    <option value="HT">Primeiro tempo</option>
+  </select>
+</div>
+
+<div class="section">
+  <div class="card" id="ranking"></div>
+</div>
+
+<div class="overlay" id="overlay" onclick="fecharDrawer()"></div>
+<div class="drawer" id="drawer"></div>
+
+<script>
+const ligas={
+  bundesliga:{nome:'🇩🇪 Bundesliga',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
+  premier:{nome:'🇬🇧 Premier League (Inglaterra)',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
+  laliga:{nome:'🇪🇸 La Liga',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv'},
+  seriea:{nome:'🇮🇹 Serie A',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv'},
+  ligue1:{nome:'🇫🇷 Ligue 1',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv'},
+  eredivisie:{nome:'🇳🇱 Eredivisie',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'},
+  portugal:{nome:'🇵🇹 Portugal',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv'},
+  scotland:{nome:'🏴 Escócia',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
+  belgium:{nome:'🇧🇪 Bélgica',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
+  turkey:{nome:'🇹🇷 Turquia',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
+  greece:{nome:'🇬🇷 Grécia',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'}
+};
+
+let cache=JSON.parse(localStorage.getItem('cacheLigas')||'{}');
+let dados=[];
+
+async function carregarTudo(){
+  dados=[];
+  for(const k in ligas){
+    if(!cache[k]){
+      const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+      cache[k]=csv;
+      localStorage.setItem('cacheLigas',JSON.stringify(cache));
+    }
+    const parsed=Papa.parse(cache[k],{header:true});
+    dados.push(calcular(parsed.data,ligas[k].nome));
+  }
+  renderizar();
+}
+
+function calcular(rows,nome){
+  const jogos=rows.filter(r=>r.FTR);
+  let ft={m:0,vM:0,vV:0,e:0,z:0},ht={m:0,vM:0,vV:0,e:0};
+
+  jogos.forEach(j=>{
+    if(j.FTR==='H')ft.vM++; else if(j.FTR==='A')ft.vV++; else ft.e++;
+    const gh=+j.FTHG,ga=+j.FTAG;
+    ft.m+=gh+ga; if(gh===0&&ga===0)ft.z++;
+
+    if(j.HTR==='H')ht.vM++; else if(j.HTR==='A')ht.vV++; else ht.e++;
+    ht.m+=(+j.HTHG||0)+(+j.HTAG||0);
+  });
+
+  const t=jogos.length;
+  return{
+    nome,
+    FT:{
+      mediaGols:(ft.m/t).toFixed(2),
+      vitoriasMandante:(ft.vM/t*100).toFixed(1),
+      vitoriasVisitante:(ft.vV/t*100).toFixed(1),
+      empates:(ft.e/t*100).toFixed(1),
+      zeroZero:(ft.z/t*100).toFixed(1)
+    },
+    HT:{
+      mediaGols:(ht.m/t).toFixed(2),
+      vitoriasMandante:(ht.vM/t*100).toFixed(1),
+      vitoriasVisitante:(ht.vV/t*100).toFixed(1),
+      empates:(ht.e/t*100).toFixed(1)
+    }
+  };
+}
+
+function renderizar(){
+  const m=metrica.value,p=periodo.value;
+  const max=Math.max(...dados.map(d=>+d[p][m]||0));
+  ranking.innerHTML='';
+  [...dados].sort((a,b)=>b[p][m]-a[p][m]).forEach(d=>{
+    const v=d[p][m];
+    ranking.innerHTML+=`
+      <div class="bar-row" onclick="abrirDrawer('${d.nome}')">
+        <div class="bar-label">${d.nome}</div>
+        <div class="bar"><div class="bar-fill" style="width:${v/max*100}%"></div></div>
+        <div class="bar-value">${v}</div>
+      </div>`;
+  });
+  history.pushState({},'',`?metrica=${m}&periodo=${p}&tema=${document.body.dataset.theme}`);
+}
+
+function abrirDrawer(nome){
+  const d=dados.find(x=>x.nome===nome);
+  drawer.innerHTML=`<h2>${nome}</h2>`+
+    Object.entries(d[periodo.value]).map(([k,v])=>`<div>${k.replace(/([A-Z])/g,' $1')}: ${v}</div>`).join('');
+  drawer.classList.add('active');overlay.classList.add('active');
+}
+
+function fecharDrawer(){drawer.classList.remove('active');overlay.classList.remove('active')}
+function alternarTema(){
+  document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
+  renderizar();
+}
+
+metrica.onchange=periodo.onchange=renderizar;
+
+const q=new URLSearchParams(location.search);
+if(q.get('tema'))document.body.dataset.theme=q.get('tema');
+if(q.get('metrica'))metrica.value=q.get('metrica');
+if(q.get('periodo'))periodo.value=q.get('periodo');
+
+carregarTudo();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>
