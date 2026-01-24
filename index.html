@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0d1b2a">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comparativo Europeu v2</title>
+<title>Comparativo Europeu</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d1b2a">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
@@ -16,7 +17,6 @@
   --accent:#00aaff;
   --text:#e0e1dd;
   --muted:#9aa4b2;
-  --good:#00ff88;
 }
 
 [data-theme="light"]{
@@ -25,7 +25,6 @@
   --accent:#005fcc;
   --text:#1b263b;
   --muted:#555;
-  --good:#00aa55;
 }
 
 *{box-sizing:border-box}
@@ -51,21 +50,21 @@ header h1{
   color:var(--accent);
 }
 
+button,select{
+  padding:10px 12px;
+  border:none;
+  border-radius:10px;
+  background:var(--card);
+  color:var(--text);
+  font-size:.95rem;
+  cursor:pointer;
+}
+
 .controls{
   padding:12px;
   display:flex;
   gap:8px;
   flex-wrap:wrap;
-}
-
-select,button{
-  padding:10px 12px;
-  border-radius:10px;
-  border:none;
-  background:var(--card);
-  color:var(--text);
-  font-size:.95rem;
-  cursor:pointer;
 }
 
 .section{padding:12px}
@@ -84,7 +83,7 @@ select,button{
   cursor:pointer;
 }
 
-.bar-label{width:140px;font-size:.9rem}
+.bar-label{width:160px;font-size:.9rem}
 .bar{flex:1;height:12px;background:rgba(0,0,0,.15);border-radius:6px}
 .bar-fill{height:100%;border-radius:6px;background:var(--accent)}
 .bar-value{width:60px;text-align:right;font-weight:600}
@@ -97,6 +96,8 @@ select,button{
   padding:16px;
   transform:translateY(100%);
   transition:.3s;
+  max-height:85vh;
+  overflow:auto;
 }
 
 .drawer.active{transform:translateY(0)}
@@ -109,6 +110,19 @@ select,button{
 }
 
 .overlay.active{display:block}
+
+.stat-group h3{
+  margin:14px 0 6px;
+  color:var(--accent);
+  font-size:.95rem;
+}
+
+.stat{
+  display:flex;
+  justify-content:space-between;
+  padding:4px 0;
+  font-size:.9rem;
+}
 </style>
 </head>
 
@@ -143,22 +157,17 @@ select,button{
 
 <script>
 const ligas={
-  bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
-  bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv'},
-  premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
-  championiship:{nome:'🇬🇧 INGLATERRA-2',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv'},
-  laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv'},
-  laliga2:{nome:'🇪🇸 ESPANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv'},
-  seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv'},
-  serieb:{nome:'🇮🇹 ITÁLIA-2',url:'https://www.football-data.co.uk/mmz4281/2526/I2.csv'},
-  ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv'},
-  ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv'},
-  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'},
-  portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv'},
-  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
-  belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
-  turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
-  greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'}
+  bundesliga:{nome:'🇩🇪 Bundesliga',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
+  premier:{nome:'🇬🇧 Premier League (Inglaterra)',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
+  laliga:{nome:'🇪🇸 La Liga',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv'},
+  seriea:{nome:'🇮🇹 Serie A',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv'},
+  ligue1:{nome:'🇫🇷 Ligue 1',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv'},
+  eredivisie:{nome:'🇳🇱 Eredivisie',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'},
+  portugal:{nome:'🇵🇹 Portugal',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv'},
+  scotland:{nome:'🏴 Escócia',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
+  belgium:{nome:'🇧🇪 Bélgica',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
+  turkey:{nome:'🇹🇷 Turquia',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
+  greece:{nome:'🇬🇷 Grécia',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'}
 };
 
 let cache=JSON.parse(localStorage.getItem('cacheLigas')||'{}');
@@ -180,43 +189,35 @@ async function carregarTudo(){
 
 function calcular(rows,nome){
   const jogos=rows.filter(r=>r.FTR);
-  let ft={m:0,vM:0,vV:0,e:0,z:0},
-    ht={m:0,vM:0,vV:0,e:0,z:0};
-
+  let ft={g:0,vm:0,vv:0,e:0,z:0},
+      ht={g:0,vm:0,vv:0,e:0,z:0};
 
   jogos.forEach(j=>{
-    if(j.FTR==='H')ft.vM++; else if(j.FTR==='A')ft.vV++; else ft.e++;
+    if(j.FTR==='H')ft.vm++; else if(j.FTR==='A')ft.vv++; else ft.e++;
     const gh=+j.FTHG,ga=+j.FTAG;
-    ft.m+=gh+ga; if(gh===0&&ga===0)ft.z++;
+    ft.g+=gh+ga;
+    if(gh===0&&ga===0)ft.z++;
 
-    if(j.HTR==='H') ht.vM++;
-    else if(j.HTR==='A') ht.vV++;
-    else ht.e++;
-
-    const htGolsCasa = +j.HTHG || 0;
-    const htGolsFora = +j.HTAG || 0;
-
-    ht.m += htGolsCasa + htGolsFora;
-
-    if(htGolsCasa === 0 && htGolsFora === 0) {
-      ht.z++;
-    }
+    if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
+    const hgh=+j.HTHG||0,hga=+j.HTAG||0;
+    ht.g+=hgh+hga;
+    if(hgh===0&&hga===0)ht.z++;
   });
 
   const t=jogos.length;
   return{
     nome,
     FT:{
-      mediaGols:(ft.m/t).toFixed(2),
-      vitoriasMandante:(ft.vM/t*100).toFixed(1),
-      vitoriasVisitante:(ft.vV/t*100).toFixed(1),
+      mediaGols:(ft.g/t).toFixed(2),
+      vitoriasMandante:(ft.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ft.vv/t*100).toFixed(1),
       empates:(ft.e/t*100).toFixed(1),
       zeroZero:(ft.z/t*100).toFixed(1)
     },
     HT:{
-      mediaGols:(ht.m/t).toFixed(2),
-      vitoriasMandante:(ht.vM/t*100).toFixed(1),
-      vitoriasVisitante:(ht.vV/t*100).toFixed(1),
+      mediaGols:(ht.g/t).toFixed(2),
+      vitoriasMandante:(ht.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ht.vv/t*100).toFixed(1),
       empates:(ht.e/t*100).toFixed(1),
       zeroZero:(ht.z/t*100).toFixed(1)
     }
@@ -225,59 +226,63 @@ function calcular(rows,nome){
 
 function renderizar(){
   const m=metrica.value,p=periodo.value;
-  const max=Math.max(...dados.map(d=>+d[p][m]||0));
+  const max=Math.max(...dados.map(d=>+d[p][m]));
   ranking.innerHTML='';
   [...dados].sort((a,b)=>b[p][m]-a[p][m]).forEach(d=>{
-    const v = d[p][m];
-    const ehPercentual = m !== 'mediaGols';
-    const valorExibido = ehPercentual ? `${v}%` : v;
+    const v=d[p][m];
+    const exibido=m==='mediaGols'?v:`${v}%`;
     ranking.innerHTML+=`
       <div class="bar-row" onclick="abrirDrawer('${d.nome}')">
         <div class="bar-label">${d.nome}</div>
-        <div class="bar">
-        <div class="bar-fill" style="width:${(v/max)*100}%"></div>
-    </div>
-    <div class="bar-value">${valorExibido}</div>
-    </div>`;
+        <div class="bar"><div class="bar-fill" style="width:${(v/max)*100}%"></div></div>
+        <div class="bar-value">${exibido}</div>
+      </div>`;
   });
-  history.pushState({},'',`?metrica=${m}&periodo=${p}&tema=${document.body.dataset.theme}`);
 }
 
 function abrirDrawer(nome){
-  drawer.innerHTML = `<h2>${nome}</h2>` +
-    Object.entries(d[periodo.value]).map(([k, v]) => {
-      const label = {
-        mediaGols: 'Média de gols',
-        vitoriasMandante: 'Vitórias do mandante',
-        vitoriasVisitante: 'Vitórias do visitante',
-        empates: 'Empates',
-        zeroZero: 'Jogos 0x0'
-      }[k] || k;
-      const valor = k === 'mediaGols' ? v : `${v}%`;
-      return `<div class="stat"><span>${label}</span><span>${valor}</span></div>`;
-    }).join('');
+  const d=dados.find(x=>x.nome===nome);
+  drawer.innerHTML=`
+    <h2>${nome}</h2>
 
+    <div class="stat-group">
+      <h3>Tempo regulamentar</h3>
+      <div class="stat"><span>Média de gols</span><span>${d.FT.mediaGols}</span></div>
+      <div class="stat"><span>Vitórias do mandante</span><span>${d.FT.vitoriasMandante}%</span></div>
+      <div class="stat"><span>Vitórias do visitante</span><span>${d.FT.vitoriasVisitante}%</span></div>
+      <div class="stat"><span>Empates</span><span>${d.FT.empates}%</span></div>
+      <div class="stat"><span>Jogos 0x0</span><span>${d.FT.zeroZero}%</span></div>
+    </div>
+
+    <div class="stat-group">
+      <h3>Primeiro tempo</h3>
+      <div class="stat"><span>Média de gols</span><span>${d.HT.mediaGols}</span></div>
+      <div class="stat"><span>Vitórias do mandante</span><span>${d.HT.vitoriasMandante}%</span></div>
+      <div class="stat"><span>Vitórias do visitante</span><span>${d.HT.vitoriasVisitante}%</span></div>
+      <div class="stat"><span>Empates</span><span>${d.HT.empates}%</span></div>
+      <div class="stat"><span>Jogos 0x0</span><span>${d.HT.zeroZero}%</span></div>
+    </div>
+  `;
+  drawer.classList.add('active');
+  overlay.classList.add('active');
 }
 
-function fecharDrawer(){drawer.classList.remove('active');overlay.classList.remove('active')}
+function fecharDrawer(){
+  drawer.classList.remove('active');
+  overlay.classList.remove('active');
+}
+
 function alternarTema(){
   document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
-  renderizar();
 }
 
 metrica.onchange=periodo.onchange=renderizar;
 
-const q=new URLSearchParams(location.search);
-if(q.get('tema'))document.body.dataset.theme=q.get('tema');
-if(q.get('metrica'))metrica.value=q.get('metrica');
-if(q.get('periodo'))periodo.value=q.get('periodo');
+if('serviceWorker'in navigator){
+  navigator.serviceWorker.register('./service-worker.js');
+}
 
 carregarTudo();
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/ligas_EURO/service-worker.js');
-}
 </script>
 
 </body>
