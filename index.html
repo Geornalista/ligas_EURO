@@ -180,15 +180,27 @@ async function carregarTudo(){
 
 function calcular(rows,nome){
   const jogos=rows.filter(r=>r.FTR);
-  let ft={m:0,vM:0,vV:0,e:0,z:0},ht={m:0,vM:0,vV:0,e:0};
+  let ft={m:0,vM:0,vV:0,e:0,z:0},
+    ht={m:0,vM:0,vV:0,e:0,z:0};
+
 
   jogos.forEach(j=>{
     if(j.FTR==='H')ft.vM++; else if(j.FTR==='A')ft.vV++; else ft.e++;
     const gh=+j.FTHG,ga=+j.FTAG;
     ft.m+=gh+ga; if(gh===0&&ga===0)ft.z++;
 
-    if(j.HTR==='H')ht.vM++; else if(j.HTR==='A')ht.vV++; else ht.e++;
-    ht.m+=(+j.HTHG||0)+(+j.HTAG||0);
+    if(j.HTR==='H') ht.vM++;
+    else if(j.HTR==='A') ht.vV++;
+    else ht.e++;
+
+    const htGolsCasa = +j.HTHG || 0;
+    const htGolsFora = +j.HTAG || 0;
+
+    ht.m += htGolsCasa + htGolsFora;
+
+    if(htGolsCasa === 0 && htGolsFora === 0) {
+      ht.z++;
+    }
   });
 
   const t=jogos.length;
@@ -205,7 +217,8 @@ function calcular(rows,nome){
       mediaGols:(ht.m/t).toFixed(2),
       vitoriasMandante:(ht.vM/t*100).toFixed(1),
       vitoriasVisitante:(ht.vV/t*100).toFixed(1),
-      empates:(ht.e/t*100).toFixed(1)
+      empates:(ht.e/t*100).toFixed(1),
+      zeroZero:(ht.z/t*100).toFixed(1)
     }
   };
 }
@@ -215,22 +228,35 @@ function renderizar(){
   const max=Math.max(...dados.map(d=>+d[p][m]||0));
   ranking.innerHTML='';
   [...dados].sort((a,b)=>b[p][m]-a[p][m]).forEach(d=>{
-    const v=d[p][m];
+    const v = d[p][m];
+    const ehPercentual = m !== 'mediaGols';
+    const valorExibido = ehPercentual ? `${v}%` : v;
     ranking.innerHTML+=`
       <div class="bar-row" onclick="abrirDrawer('${d.nome}')">
         <div class="bar-label">${d.nome}</div>
-        <div class="bar"><div class="bar-fill" style="width:${v/max*100}%"></div></div>
-        <div class="bar-value">${v}</div>
-      </div>`;
+        <div class="bar">
+        <div class="bar-fill" style="width:${(v/max)*100}%"></div>
+    </div>
+    <div class="bar-value">${valorExibido}</div>
+    </div>`;
   });
   history.pushState({},'',`?metrica=${m}&periodo=${p}&tema=${document.body.dataset.theme}`);
 }
 
 function abrirDrawer(nome){
-  const d=dados.find(x=>x.nome===nome);
-  drawer.innerHTML=`<h2>${nome}</h2>`+
-    Object.entries(d[periodo.value]).map(([k,v])=>`<div>${k.replace(/([A-Z])/g,' $1')}: ${v}</div>`).join('');
-  drawer.classList.add('active');overlay.classList.add('active');
+  drawer.innerHTML = `<h2>${nome}</h2>` +
+    Object.entries(d[periodo.value]).map(([k, v]) => {
+      const label = {
+        mediaGols: 'Média de gols',
+        vitoriasMandante: 'Vitórias do mandante',
+        vitoriasVisitante: 'Vitórias do visitante',
+        empates: 'Empates',
+        zeroZero: 'Jogos 0x0'
+      }[k] || k;
+      const valor = k === 'mediaGols' ? v : `${v}%`;
+      return `<div class="stat"><span>${label}</span><span>${valor}</span></div>`;
+    }).join('');
+
 }
 
 function fecharDrawer(){drawer.classList.remove('active');overlay.classList.remove('active')}
