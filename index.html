@@ -1,138 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Comparativo Europeu — Tempo regulamentar</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparativo Europeu</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
 <style>
-:root{
-  --bg:#0d1b2a;
-  --card:#1b263b;
-  --accent:#00aaff;
-  --text:#e0e1dd;
-}
-[data-theme="light"]{
-  --bg:#f4f6f8;
-  --card:#ffffff;
-  --accent:#005fcc;
-  --text:#1b263b;
-}
+:root{--bg:#0d1b2a;--card:#1b263b;--accent:#00aaff;--text:#e0e1dd}
+[data-theme="light"]{--bg:#f4f6f8;--card:#fff;--accent:#005fcc;--text:#1b263b}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:system-ui,sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
-header{
-  padding:14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-h1{
-  margin:0;
-  font-size:1.1rem;
-  color:var(--accent);
-}
-button,select{
-  padding:8px 10px;
-  border:none;
-  border-radius:10px;
-  background:var(--card);
-  color:var(--text);
-  cursor:pointer;
-}
-.tabs{
-  display:flex;
-  gap:6px;
-  padding:0 12px 12px;
-}
-.tabs button{
-  flex:1;
-  opacity:.6;
-}
-.tabs button.active{
-  background:var(--accent);
-  color:#000;
-  font-weight:600;
-  opacity:1;
-}
-.controls{
-  padding:0 12px 12px;
-}
-.section{
-  padding:12px;
-  display:grid;
-  gap:12px;
-}
-@media(min-width:900px){
-  .section{grid-template-columns:1fr 1fr}
-}
-.card{
-  background:var(--card);
-  border-radius:14px;
-  padding:14px;
-}
-.card h2{
-  margin:0 0 10px;
-  font-size:.9rem;
-  color:var(--accent);
-}
-.row{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  margin:6px 0;
-}
-.label{
-  width:210px;
-  font-size:.85rem;
-}
-.bar{
-  flex:1;
-  height:8px;
-  background:rgba(0,0,0,.25);
-  border-radius:4px;
-}
-.fill{
-  height:100%;
-  background:var(--accent);
-  border-radius:4px;
-}
-.value{
-  width:60px;
-  text-align:right;
-  font-weight:600;
-}
-.note{
-  opacity:.7;
-  font-size:.85rem;
-  line-height:1.4;
-}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:14px;display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:1.1rem;color:var(--accent)}
+button,select{padding:8px 10px;border:none;border-radius:10px;background:var(--card);color:var(--text);cursor:pointer}
+.tabs{display:flex;gap:6px;padding:0 12px 12px}
+.tabs button{flex:1;opacity:.6}
+.tabs button.active{background:var(--accent);color:#000;font-weight:600;opacity:1}
+.controls{padding:0 12px 12px}
+.section{padding:12px;display:grid;gap:12px}
+@media(min-width:900px){.section{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border-radius:14px;padding:14px}
+.card h2{margin:0 0 10px;font-size:.9rem;color:var(--accent)}
+.row{display:flex;gap:8px;align-items:center;margin:6px 0}
+.label{width:210px;font-size:.85rem}
+.bar{flex:1;height:8px;background:rgba(0,0,0,.25);border-radius:4px}
+.fill{height:100%;background:var(--accent);border-radius:4px}
+.value{width:60px;text-align:right;font-weight:600}
+.note{opacity:.7;font-size:.85rem;line-height:1.4}
 </style>
 </head>
-
 <body data-theme="dark">
-
 <header>
   <h1>Comparativo Europeu</h1>
   <button onclick="alternarTema()">🌓</button>
 </header>
 
 <div class="tabs">
-  <button class="active">Tempo regulamentar</button>
-  <button disabled>HT × FT</button>
-  <button disabled>Mandante × Visitante</button>
+  <button id="tabFT" class="active">Tempo regulamentar</button>
+  <button id="tabHTFT">HT × FT</button>
+  <button id="tabMV">Mandante × Visitante</button>
 </div>
 
 <div class="controls">
   <select id="mercado">
     <option value="mediaGols">Média de gols</option>
     <option value="zeroZero">Jogos 0x0</option>
+    <option value="over05">Over 0.5 gols</option>
+    <option value="under05">Under 0.5 gols</option>
+    <option value="over15">Over 1.5 gols</option>
+    <option value="under15">Under 1.5 gols</option>
     <option value="over25">Over 2.5 gols</option>
     <option value="under25">Under 2.5 gols</option>
     <option value="vitoriasMandante">Vitórias do mandante</option>
@@ -153,156 +69,171 @@ button,select{
 </div>
 
 <script>
-/* =========================
-   TODAS AS LIGAS
-========================= */
-const ligas = {
-  bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
-  bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv'},
-  premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
-  premier2:{nome:'🇬🇧 INGLATERRA-2',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv'},
-  laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv'},
-  laliga2:{nome:'🇪🇸 ESPANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv'},
-  seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv'},
-  seriea2:{nome:'🇮🇹 ITÁLIA-2',url:'https://www.football-data.co.uk/mmz4281/2526/I2.csv'},
-  ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv'},
-  ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv'},
-  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'},
-  portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv'},
-  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
-  belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
-  turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
-  greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'},
-
-  denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',season:'2025/2026'},
-  switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',season:'2025/2026'},
-  norway:{nome:'🇳🇴 NORUEGA',url:'https://www.football-data.co.uk/new/NOR.csv',season:'2025'},
-  sweden:{nome:'🇸🇪 SUÉCIA',url:'https://www.football-data.co.uk/new/SWE.csv',season:'2025'}
+const ligas={
+  bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv',ht:true},
+  bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv',ht:true},
+  premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv',ht:true},
+  premier2:{nome:'🇬🇧 INGLATERRA-2',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv',ht:true},
+  laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv',ht:true},
+  laliga2:{nome:'🇪🇸 ESPANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv',ht:true},
+  seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv',ht:true},
+  seriea2:{nome:'🇮🇹 ITÁLIA-2',url:'https://www.football-data.co.uk/mmz4281/2526/I2.csv',ht:true},
+  ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv',ht:true},
+  ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv',ht:true},
+  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv',ht:true},
+  portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv',ht:true},
+  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
+  belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
+  turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
+  greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
+  denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',season:'2025/2026',ht:false},
+  switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',season:'2025/2026',ht:false},
+  norway:{nome:'🇳🇴 NORUEGA',url:'https://www.football-data.co.uk/new/NOR.csv',season:'2025',ht:false},
+  sweden:{nome:'🇸🇪 SUÉCIA',url:'https://www.football-data.co.uk/new/SWE.csv',season:'2025',ht:false}
 };
 
-let dados=[];
+let dados=[],aba='FT';
 
-/* =========================
-   CARREGAMENTO
-========================= */
 async function carregar(){
   dados=[];
   for(const k in ligas){
-    const csv = await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
-    let rows = Papa.parse(csv,{header:true}).data;
-    if(ligas[k].season){
-      rows = rows.filter(r => r.SEASON === ligas[k].season);
-    }
-    dados.push(calcular(rows, ligas[k].nome));
+    const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+    let rows=Papa.parse(csv,{header:true}).data;
+    if(ligas[k].season) rows=rows.filter(r=>r.SEASON===ligas[k].season);
+    dados.push(calcular(rows,ligas[k]));
   }
   render();
 }
 
-/* =========================
-   CÁLCULO FT
-========================= */
-function calcular(rows,nome){
-  const jogos = rows.filter(r=>r.FTR);
-  let g=0,z=0,o25=0,vm=0,vv=0,e=0;
-
+function calcular(rows,liga){
+  const jogos=rows.filter(r=>r.FTR);
+  let ft={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
+  let ht={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
   jogos.forEach(j=>{
-    const hg=j.FTHG??j.HG??0;
-    const ag=j.FTAG??j.AG??0;
+    const hg=j.FTHG??j.HG??0, ag=j.FTAG??j.AG??0;
     const tg=(+hg)+(+ag);
-
-    g+=tg;
-    if(tg===0)z++;
-    if(tg>=3)o25++;
-
-    if(j.FTR==='H')vm++;
-    else if(j.FTR==='A')vv++;
-    else e++;
+    ft.g+=tg;
+    if(tg===0)ft.z++;
+    if(tg>=1)ft.o05++;
+    if(tg>=2)ft.o15++;
+    if(tg>=3)ft.o25++;
+    if(j.FTR==='H')ft.vm++; else if(j.FTR==='A')ft.vv++; else ft.e++;
+    if(liga.ht){
+      const htg=(+(j.HTHG||0))+(+(j.HTAG||0));
+      ht.g+=htg;
+      if(htg===0)ht.z++;
+      if(htg>=1)ht.o05++;
+      if(htg>=2)ht.o15++;
+      if(htg>=3)ht.o25++;
+      if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
+    }
   });
-
   const t=jogos.length||1;
-
   return{
-    nome,
-    mediaGols:(g/t).toFixed(2),
-    zeroZero:(z/t*100).toFixed(1),
-    over25:(o25/t*100).toFixed(1),
-    under25:((t-o25)/t*100).toFixed(1),
-    vitoriasMandante:(vm/t*100).toFixed(1),
-    vitoriasVisitante:(vv/t*100).toFixed(1),
-    empates:(e/t*100).toFixed(1)
+    nome:liga.nome,ht:liga.ht,
+    FT:{
+      mediaGols:(ft.g/t).toFixed(2),
+      zeroZero:(ft.z/t*100).toFixed(1),
+      over05:(ft.o05/t*100).toFixed(1),
+      under05:((t-ft.o05)/t*100).toFixed(1),
+      over15:(ft.o15/t*100).toFixed(1),
+      under15:((t-ft.o15)/t*100).toFixed(1),
+      over25:(ft.o25/t*100).toFixed(1),
+      under25:((t-ft.o25)/t*100).toFixed(1),
+      vitoriasMandante:(ft.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ft.vv/t*100).toFixed(1),
+      empates:(ft.e/t*100).toFixed(1)
+    },
+    HT: liga.ht ? {
+      mediaGols:(ht.g/t).toFixed(2),
+      zeroZero:(ht.z/t*100).toFixed(1),
+      over05:(ht.o05/t*100).toFixed(1),
+      under05:((t-ht.o05)/t*100).toFixed(1),
+      over15:(ht.o15/t*100).toFixed(1),
+      under15:((t-ht.o15)/t*100).toFixed(1),
+      over25:(ht.o25/t*100).toFixed(1),
+      under25:((t-ht.o25)/t*100).toFixed(1),
+      vitoriasMandante:(ht.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ht.vv/t*100).toFixed(1),
+      empates:(ht.e/t*100).toFixed(1)
+    }:null
   };
 }
 
-/* =========================
-   RENDER
-========================= */
 function render(){
   const m=mercado.value;
-  rankingA.innerHTML='';
-  rankingB.innerHTML='';
-
-  tituloA.innerText = tituloAFor(m);
-  tituloB.innerText = tituloBFor(m);
-
-  // coluna esquerda
-  [...dados].sort((a,b)=>b[m]-a[m]).forEach(l=>{
-    rankingA.innerHTML+=linha(l.nome,l[m],maxValor(m));
-  });
-
-  // coluna direita (ordenada independentemente)
-  if(m==='over25'){
-    [...dados].sort((a,b)=>b.under25-a.under25).forEach(l=>{
-      rankingB.innerHTML+=linha(l.nome,l.under25,100);
-    });
-  }else if(m==='vitoriasMandante'){
-    [...dados].sort((a,b)=>b.vitoriasVisitante-a.vitoriasVisitante).forEach(l=>{
-      rankingB.innerHTML+=linha(l.nome,l.vitoriasVisitante,100);
-    });
-  }else{
-    rankingB.innerHTML='<div class="note">Coluna explicativa para contextualizar este mercado no tempo regulamentar.</div>';
+  rankingA.innerHTML='';rankingB.innerHTML='';
+  if(aba==='FT'){
+    tituloA.innerText=titulo(m,'FT');
+    tituloB.innerText=colunaDireita(m);
+    const lista=[...dados].sort((a,b)=>b.FT[m]-a.FT[m]);
+    const max=Math.max(...lista.map(d=>+d.FT[m]));
+    lista.forEach(d=>rankingA.innerHTML+=linha(d.nome,d.FT[m],max,m==='mediaGols'));
+    if(m.startsWith('over')){
+      const um=m.replace('over','under');
+      const listaB=[...dados].sort((a,b)=>b.FT[um]-a.FT[um]);
+      listaB.forEach(d=>rankingB.innerHTML+=linha(d.nome,d.FT[um],100,false));
+    }else{
+      rankingB.innerHTML='<div class="note">Contexto do mercado no tempo regulamentar.</div>';
+    }
+  }
+  if(aba==='HTFT'){
+    const lista=dados.filter(d=>d.ht);
+    tituloA.innerText=titulo(m,'HT');
+    tituloB.innerText=titulo(m,'FT');
+    const maxHT=Math.max(...lista.map(d=>+d.HT[m]));
+    const maxFT=Math.max(...lista.map(d=>+d.FT[m]));
+    [...lista].sort((a,b)=>b.HT[m]-a.HT[m]).forEach(d=>rankingA.innerHTML+=linha(d.nome,d.HT[m],maxHT,m==='mediaGols'));
+    [...lista].sort((a,b)=>b.FT[m]-a.FT[m]).forEach(d=>rankingB.innerHTML+=linha(d.nome,d.FT[m],maxFT,m==='mediaGols'));
+  }
+  if(aba==='MV'){
+    tituloA.innerText='Vitórias do mandante (FT)';
+    tituloB.innerText='Vitórias do visitante (FT)';
+    const maxA=Math.max(...dados.map(d=>+d.FT.vitoriasMandante));
+    const maxB=Math.max(...dados.map(d=>+d.FT.vitoriasVisitante));
+    [...dados].sort((a,b)=>b.FT.vitoriasMandante-a.FT.vitoriasMandante)
+      .forEach(d=>rankingA.innerHTML+=linha(d.nome,d.FT.vitoriasMandante,maxA,false));
+    [...dados].sort((a,b)=>b.FT.vitoriasVisitante-a.FT.vitoriasVisitante)
+      .forEach(d=>rankingB.innerHTML+=linha(d.nome,d.FT.vitoriasVisitante,maxB,false));
   }
 }
 
-function maxValor(c){
-  return Math.max(...dados.map(d=>+d[c]));
+function linha(nome,valor,max,isMedia){
+  const w=(valor/max)*100;
+  return `<div class="row"><div class="label">${nome}</div><div class="bar"><div class="fill" style="width:${w}%"></div></div><div class="value">${isMedia?valor:valor+'%'}</div></div>`;
 }
 
-function linha(nome,valor,max){
-  const pct = (valor/max)*100;
-  return `
-  <div class="row">
-    <div class="label">${nome}</div>
-    <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
-    <div class="value">${valor}${valor<10?'' : '%'}</div>
-  </div>`;
+function titulo(m,e){
+  const t={
+    mediaGols:'Média de gols',
+    zeroZero:'Jogos 0x0',
+    over05:'Over 0.5 gols',
+    under05:'Under 0.5 gols',
+    over15:'Over 1.5 gols',
+    under15:'Under 1.5 gols',
+    over25:'Over 2.5 gols',
+    under25:'Under 2.5 gols',
+    vitoriasMandante:'Vitórias do mandante',
+    vitoriasVisitante:'Vitórias do visitante',
+    empates:'Empates'
+  };
+  return `${t[m]} — ${e}`;
 }
-
-function tituloAFor(m){
-  return {
-    mediaGols:'Média de gols (FT)',
-    zeroZero:'Jogos 0x0 (FT)',
-    over25:'Over 2.5 gols (FT)',
-    under25:'Under 2.5 gols (FT)',
-    vitoriasMandante:'Vitórias do mandante (FT)',
-    vitoriasVisitante:'Vitórias do visitante (FT)',
-    empates:'Empates (FT)'
-  }[m];
-}
-
-function tituloBFor(m){
-  if(m==='over25') return 'Under 2.5 gols (FT)';
-  if(m==='vitoriasMandante') return 'Vitórias do visitante (FT)';
+function colunaDireita(m){
+  if(m.startsWith('over')) return m.replace('over','Under ')+' (FT)';
   return 'Contexto';
 }
 
-mercado.onchange=render;
-
-function alternarTema(){
-  document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
+tabFT.onclick=()=>{aba='FT';setTab(tabFT)};
+tabHTFT.onclick=()=>{aba='HTFT';setTab(tabHTFT)};
+tabMV.onclick=()=>{aba='MV';setTab(tabMV)};
+function setTab(btn){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');render();
 }
-
+mercado.onchange=render;
+function alternarTema(){document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark'}
 carregar();
 </script>
-
 </body>
 </html>
