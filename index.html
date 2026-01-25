@@ -16,69 +16,49 @@
   --card:#1b263b;
   --accent:#00aaff;
   --text:#e0e1dd;
-  --muted:#9aa4b2;
 }
 [data-theme="light"]{
   --bg:#f4f6f8;
   --card:#ffffff;
   --accent:#005fcc;
   --text:#1b263b;
-  --muted:#555;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family:system-ui,sans-serif;
   background:var(--bg);
   color:var(--text);
 }
-
 header{
   padding:16px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  border-bottom:1px solid rgba(0,0,0,.1);
+  border-bottom:1px solid rgba(0,0,0,.15);
 }
-header h1{
-  margin:0;
-  font-size:1.2rem;
-  color:var(--accent);
-}
-
+h1{margin:0;font-size:1.2rem;color:var(--accent)}
 button,select{
   padding:10px 12px;
   border:none;
   border-radius:10px;
   background:var(--card);
   color:var(--text);
-  font-size:.95rem;
   cursor:pointer;
 }
-
-.controls{
-  padding:12px;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
+.controls{padding:12px}
 .toggle{
   display:flex;
   gap:8px;
   padding:0 12px 12px;
 }
-.toggle button{
-  flex:1;
-  opacity:.6;
-}
+.toggle button{flex:1;opacity:.6}
 .toggle button.active{
   background:var(--accent);
   color:#000;
   font-weight:600;
   opacity:1;
 }
-
 .section{
   padding:12px;
   display:grid;
@@ -87,64 +67,26 @@ button,select{
 @media(min-width:900px){
   .section{grid-template-columns:1fr 1fr}
 }
-
 .card{
   background:var(--card);
   border-radius:14px;
   padding:14px;
 }
-
 .card h2{
   margin:0 0 8px;
   font-size:.95rem;
   color:var(--accent);
 }
-
 .row{
   display:flex;
-  align-items:center;
   gap:10px;
+  align-items:center;
   margin:8px 0;
-  cursor:pointer;
 }
-
-.label{width:190px;font-size:.85rem}
-.bar{flex:1;height:10px;background:rgba(0,0,0,.2);border-radius:5px}
+.label{width:200px;font-size:.85rem}
+.bar{flex:1;height:10px;background:rgba(0,0,0,.25);border-radius:5px}
 .fill{height:100%;background:var(--accent);border-radius:5px}
 .value{width:70px;text-align:right;font-weight:600}
-
-.drawer{
-  position:fixed;
-  left:0;right:0;bottom:0;
-  background:var(--card);
-  border-radius:18px 18px 0 0;
-  padding:16px;
-  transform:translateY(100%);
-  transition:.3s;
-  max-height:85vh;
-  overflow:auto;
-}
-.drawer.active{transform:translateY(0)}
-
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  display:none;
-}
-.overlay.active{display:block}
-
-.stat-group h3{
-  margin:14px 0 6px;
-  color:var(--accent);
-  font-size:.95rem;
-}
-.stat{
-  display:flex;
-  justify-content:space-between;
-  padding:4px 0;
-  font-size:.9rem;
-}
 </style>
 </head>
 
@@ -187,57 +129,57 @@ button,select{
   </div>
 </div>
 
-<div class="overlay" id="overlay" onclick="fecharDrawer()"></div>
-<div class="drawer" id="drawer"></div>
-
 <script>
-/* =======================
-   DADOS (V2 ORIGINAIS)
-======================= */
-
+/* ======================
+   LIGAS + COBERTURA
+====================== */
 const ligas = {
-  bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
-  bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv'},
-  premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
-  premier2:{nome:'🇬🇧 INGLATERRA-2',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv'},
-  laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv'},
-  laliga2:{nome:'🇪🇸 ESPANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv'},
-  seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv'},
-  seriea2:{nome:'🇮🇹 ITÁLIA-2',url:'https://www.football-data.co.uk/mmz4281/2526/I2.csv'},
-  ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv'},
-  ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv'},
-  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'},
-  portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv'},
-  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
-  belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
-  turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
-  greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'}
+  bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv',ht:true},
+  bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv',ht:true},
+  premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv',ht:true},
+  premier2:{nome:'🇬🇧 INGLATERRA-2',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv',ht:true},
+  laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv',ht:true},
+  laliga2:{nome:'🇪🇸 ESPANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv',ht:true},
+  seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv',ht:true},
+  seriea2:{nome:'🇮🇹 ITÁLIA-2',url:'https://www.football-data.co.uk/mmz4281/2526/I2.csv',ht:true},
+  ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv',ht:true},
+  ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv',ht:true},
+  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv',ht:true},
+  portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv',ht:true},
+  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
+  belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
+  turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
+  greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
+
+  denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',ht:false,season:'2025/2026'},
+  switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',ht:false,season:'2025/2026'},
+  norway:{nome:'🇳🇴 NORUEGA',url:'https://www.football-data.co.uk/new/NOR.csv',ht:false,season:'2025'},
+  sweden:{nome:'🇸🇪 SUÉCIA',url:'https://www.football-data.co.uk/new/SWE.csv',ht:false,season:'2025'}
 };
 
-let cache = JSON.parse(localStorage.getItem('cacheLigas')||'{}');
-let dados = [];
-let modoAnalise = 'HTFT';
+let dados=[];
+let modoAnalise='HTFT';
 
-/* =======================
-   CARREGAMENTO + CÁLCULO
-======================= */
-
+/* ======================
+   CARREGAMENTO
+====================== */
 async function carregarTudo(){
   dados=[];
   for(const k in ligas){
-    if(!cache[k]){
-      const csv = await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
-      cache[k]=csv;
-      localStorage.setItem('cacheLigas',JSON.stringify(cache));
+    const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+    let rows=Papa.parse(csv,{header:true}).data;
+
+    if(ligas[k].season){
+      rows=rows.filter(r=>r.SEASON===ligas[k].season);
     }
-    const parsed = Papa.parse(cache[k],{header:true});
-    dados.push(calcular(parsed.data,ligas[k].nome));
+
+    dados.push(calcular(rows,ligas[k].nome,ligas[k].ht));
   }
   renderizar();
 }
 
-function calcular(rows,nome){
-  const jogos = rows.filter(r=>r.FTR);
+function calcular(rows,nome,temHT){
+  const jogos=rows.filter(r=>r.FTR);
   let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0},
       ht={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
 
@@ -258,6 +200,7 @@ function calcular(rows,nome){
   const t=jogos.length;
   return{
     nome,
+    temHT,
     FT:{
       mediaGols:(ft.g/t).toFixed(2),
       vitoriasMandante:(ft.vm/t*100).toFixed(1),
@@ -271,7 +214,7 @@ function calcular(rows,nome){
       over25:(ft.o25/t*100).toFixed(1),
       under25:((t-ft.o25)/t*100).toFixed(1)
     },
-    HT:{
+    HT: temHT ? {
       mediaGols:(ht.g/t).toFixed(2),
       vitoriasMandante:(ht.vm/t*100).toFixed(1),
       vitoriasVisitante:(ht.vv/t*100).toFixed(1),
@@ -283,61 +226,50 @@ function calcular(rows,nome){
       under15:((t-ht.o15)/t*100).toFixed(1),
       over25:(ht.o25/t*100).toFixed(1),
       under25:((t-ht.o25)/t*100).toFixed(1)
-    }
+    } : null
   };
 }
 
-/* =======================
-   RENDERIZAÇÃO
-======================= */
-
+/* ======================
+   RENDER
+====================== */
 function renderizar(){
-  const m = mercado.value;
+  const m=mercado.value;
 
   if(modoAnalise==='HTFT'){
+    const lista=dados.filter(d=>d.temHT);
     tituloA.innerText=label(m,'HT');
     tituloB.innerText=label(m,'FT');
-    renderRanking(rankingA,'HT',m);
-    renderRanking(rankingB,'FT',m);
-  } else {
+    renderRanking(rankingA,lista,'HT',m);
+    renderRanking(rankingB,lista,'FT',m);
+  }else{
     tituloA.innerText=label(m,'Mandante');
     tituloB.innerText=label(m,'Visitante');
-    renderRanking(rankingA,'FT',m,true);
-    renderRanking(rankingB,'FT',m,false);
+    renderRanking(rankingA,dados,'FT',m,true);
+    renderRanking(rankingB,dados,'FT',m,false);
   }
 }
 
-function renderRanking(container,periodo,met,isMandante){
+function renderRanking(container,lista,periodo,met,isMandante){
   container.innerHTML='';
-  const valores=dados.map(d=>{
-    if(modoAnalise==='MV' && met.startsWith('vitorias')){
-      return isMandante?+d[periodo].vitoriasMandante:+d[periodo].vitoriasVisitante;
-    }
-    return +d[periodo][met];
-  });
-  const max=Math.max(...valores);
-
-  [...dados].sort((a,b)=>{
-    const va=valor(a,periodo,met,isMandante);
-    const vb=valor(b,periodo,met,isMandante);
-    return vb-va;
-  }).forEach(d=>{
-    const v=valor(d,periodo,met,isMandante);
-    const txt=met==='mediaGols'?v:`${v}%`;
-    container.innerHTML+=`
-      <div class="row" onclick="abrirDrawer('${d.nome}')">
-        <div class="label">${d.nome}</div>
-        <div class="bar"><div class="fill" style="width:${(v/max)*100}%"></div></div>
-        <div class="value">${txt}</div>
-      </div>`;
-  });
+  const max=Math.max(...lista.map(d=>valor(d,periodo,met,isMandante)));
+  lista.sort((a,b)=>valor(b,periodo,met,isMandante)-valor(a,periodo,met,isMandante))
+    .forEach(d=>{
+      const v=valor(d,periodo,met,isMandante);
+      const txt=met==='mediaGols'?v:`${v}%`;
+      container.innerHTML+=`
+        <div class="row">
+          <div class="label">${d.nome}</div>
+          <div class="bar"><div class="fill" style="width:${(v/max)*100}%"></div></div>
+          <div class="value">${txt}</div>
+        </div>`;
+    });
 }
 
 function valor(d,p,m,isMandante){
-  if(modoAnalise==='MV' && m==='vitoriasMandante')
+  if(modoAnalise==='MV' && m.startsWith('vitorias')){
     return isMandante?+d[p].vitoriasMandante:+d[p].vitoriasVisitante;
-  if(modoAnalise==='MV' && m==='vitoriasVisitante')
-    return isMandante?+d[p].vitoriasMandante:+d[p].vitoriasVisitante;
+  }
   return +d[p][m];
 }
 
@@ -358,54 +290,14 @@ function label(m,eixo){
   return `${l[m]} — ${eixo}`;
 }
 
-/* =======================
+/* ======================
    UI
-======================= */
-
-btnHTFT.onclick=()=>{
-  modoAnalise='HTFT';
-  btnHTFT.classList.add('active');
-  btnMV.classList.remove('active');
-  renderizar();
-};
-btnMV.onclick=()=>{
-  modoAnalise='MV';
-  btnMV.classList.add('active');
-  btnHTFT.classList.remove('active');
-  renderizar();
-};
-
+====================== */
+btnHTFT.onclick=()=>{modoAnalise='HTFT';btnHTFT.classList.add('active');btnMV.classList.remove('active');renderizar();}
+btnMV.onclick=()=>{modoAnalise='MV';btnMV.classList.add('active');btnHTFT.classList.remove('active');renderizar();}
 mercado.onchange=renderizar;
-
 function alternarTema(){
   document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
-}
-
-function abrirDrawer(nome){
-  const d=dados.find(x=>x.nome===nome);
-  drawer.innerHTML=`
-    <h2>${nome}</h2>
-    ${['FT','HT'].map(t=>`
-      <div class="stat-group">
-        <h3>${t==='FT'?'Tempo regulamentar':'Primeiro tempo'}</h3>
-        ${Object.entries(d[t]).map(([k,v])=>{
-          const lbl=label(k,'').replace(' — ','');
-          const val=k==='mediaGols'?v:`${v}%`;
-          return `<div class="stat"><span>${lbl}</span><span>${val}</span></div>`;
-        }).join('')}
-      </div>
-    `).join('')}
-  `;
-  drawer.classList.add('active');
-  overlay.classList.add('active');
-}
-function fecharDrawer(){
-  drawer.classList.remove('active');
-  overlay.classList.remove('active');
-}
-
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./service-worker.js');
 }
 
 carregarTudo();
