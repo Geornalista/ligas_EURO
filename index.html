@@ -89,19 +89,19 @@ button,select{
   margin:6px 0
 }
 .label{
-  width:220px;
+  width:180px;
   font-size:.85rem
 }
 .bar{
   flex:1;
-  height:8px;
+  height:10px;
   background:rgba(0,0,0,.25);
-  border-radius:4px
+  border-radius:5px
 }
 .fill{
   height:100%;
   background:var(--accent);
-  border-radius:4px;
+  border-radius:5px;
   transition:width .3s ease
 }
 .value{
@@ -112,6 +112,12 @@ button,select{
 .note{
   opacity:.7;
   font-size:.85rem
+}
+
+/* Mobile tuning real */
+@media(max-width:600px){
+  .label{width:130px}
+  .bar{height:14px}
 }
 </style>
 </head>
@@ -145,7 +151,7 @@ button,select{
 </div>
 
 <script>
-const mercados = {
+const mercados={
   FT:['mediaGols','zeroZero','over05','under05','over15','under15','over25','under25','vitoriasMandante','vitoriasVisitante','empates'],
   HTFT:['mediaGols','zeroZero','over05','under05','over15','under15','over25','under25','vitoriasMandante','vitoriasVisitante','empates'],
   MV:['vitoriasMandante','vitoriasVisitante','empates']
@@ -154,14 +160,14 @@ const mercados = {
 const labels={
   mediaGols:'Média de gols',
   zeroZero:'Jogos 0x0',
-  over05:'Over 0.5 gols',
-  under05:'Under 0.5 gols',
-  over15:'Over 1.5 gols',
-  under15:'Under 1.5 gols',
-  over25:'Over 2.5 gols',
-  under25:'Under 2.5 gols',
-  vitoriasMandante:'Vitórias do mandante',
-  vitoriasVisitante:'Vitórias do visitante',
+  over05:'Over 0.5',
+  under05:'Under 0.5',
+  over15:'Over 1.5',
+  under15:'Under 1.5',
+  over25:'Over 2.5',
+  under25:'Under 2.5',
+  vitoriasMandante:'Vitórias mandante',
+  vitoriasVisitante:'Vitórias visitante',
   empates:'Empates'
 };
 
@@ -202,11 +208,8 @@ function setMercados(){
 
 async function carregar(){
   for(const k in ligas){
-    const csv = await fetch(
-      'https://corsproxy.io/?' + encodeURIComponent(ligas[k].url)
-    ).then(r=>r.text());
-
-    const rows = Papa.parse(csv,{header:true}).data;
+    const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+    const rows=Papa.parse(csv,{header:true}).data;
     dados.push(calc(rows,ligas[k]));
   }
   setMercados();
@@ -214,20 +217,19 @@ async function carregar(){
 }
 
 function calc(rows,liga){
-  const jogos = rows.filter(r=>{
-    const hg = r.FTHG ?? r.HG;
-    const ag = r.FTAG ?? r.AG;
-    return hg !== undefined && ag !== undefined && hg !== '' && ag !== '';
+  const jogos=rows.filter(r=>{
+    const hg=r.FTHG??r.HG;
+    const ag=r.FTAG??r.AG;
+    return hg!==''&&ag!=='';
   });
 
   let ft={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
-  let ht={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
 
   jogos.forEach(j=>{
-    const hg = j.FTHG ?? j.HG;
-    const ag = j.FTAG ?? j.AG;
-    const tg = (+hg)+(+ag);
-    const resultado = j.FTR || j.Res;
+    const hg=j.FTHG??j.HG;
+    const ag=j.FTAG??j.AG;
+    const tg=(+hg)+(+ag);
+    const res=j.FTR||j.Res;
 
     ft.g+=tg;
     if(tg===0)ft.z++;
@@ -235,14 +237,9 @@ function calc(rows,liga){
     if(tg>=2)ft.o15++;
     if(tg>=3)ft.o25++;
 
-    if(resultado==='H')ft.vm++;
-    else if(resultado==='A')ft.vv++;
-    else if(resultado==='D')ft.e++;
-
-    if(liga.ht){
-      const htg=(+(j.HTHG||0))+(+(j.HTAG||0));
-      ht.g+=htg;
-    }
+    if(res==='H')ft.vm++;
+    else if(res==='A')ft.vv++;
+    else if(res==='D')ft.e++;
   });
 
   const t=jogos.length||1;
@@ -274,30 +271,36 @@ function render(){
 
   if(aba==='FT'){
     tituloA.textContent=labels[m]+' — FT';
-    tituloB.textContent='Contexto';
+    tituloB.textContent='';
 
     const l=[...dados].sort((a,b)=>b.FT[m]-a.FT[m]);
     const max=Math.max(...l.map(d=>+d.FT[m]));
 
-    l.forEach(d=>{
-      rankingA.innerHTML+=row(d.nome,d.FT[m],max,m==='mediaGols');
-    });
+    l.forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT[m],max,m==='mediaGols'));
+  }
 
-    rankingB.innerHTML='<div class="note">Leitura complementar do tempo regulamentar.</div>';
+  if(aba==='MV'){
+    tituloA.textContent='Vitórias mandante';
+    tituloB.textContent='Vitórias visitante';
+
+    const maxA=Math.max(...dados.map(d=>+d.FT.vitoriasMandante));
+    const maxB=Math.max(...dados.map(d=>+d.FT.vitoriasVisitante));
+
+    dados.forEach(d=>{
+      rankingA.innerHTML+=row(d.nome,d.FT.vitoriasMandante,maxA,false);
+      rankingB.innerHTML+=row(d.nome,d.FT.vitoriasVisitante,maxB,false);
+    });
   }
 }
 
 function row(nome,val,max,isMedia){
-  const isMobile = window.innerWidth < 600;
-  const pct = val / max;
-  const width = isMobile ? (35 + pct * 65) : (pct * 100);
+  const pct=val/max;
+  const width=30+pct*70; // escala estendida real
 
   return `
   <div class="row">
     <div class="label">${nome}</div>
-    <div class="bar">
-      <div class="fill" style="width:${width}%"></div>
-    </div>
+    <div class="bar"><div class="fill" style="width:${width}%"></div></div>
     <div class="value">${isMedia?val:val+'%'}</div>
   </div>`;
 }
@@ -316,8 +319,7 @@ function activate(btn){
 mercado.onchange=render;
 
 function alternarTema(){
-  document.body.dataset.theme =
-    document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
 }
 
 carregar();
