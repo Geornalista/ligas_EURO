@@ -32,6 +32,7 @@ body{
   background:var(--bg);
   color:var(--text);
 }
+
 header{
   padding:16px;
   display:flex;
@@ -44,6 +45,7 @@ header h1{
   font-size:1.2rem;
   color:var(--accent);
 }
+
 button,select{
   padding:10px 12px;
   border:none;
@@ -53,29 +55,63 @@ button,select{
   font-size:.95rem;
   cursor:pointer;
 }
+
 .controls{
   padding:12px;
   display:flex;
   gap:8px;
   flex-wrap:wrap;
 }
-.section{padding:12px}
+
+.toggle{
+  display:flex;
+  gap:8px;
+  padding:0 12px 12px;
+}
+.toggle button{
+  flex:1;
+  opacity:.6;
+}
+.toggle button.active{
+  background:var(--accent);
+  color:#000;
+  font-weight:600;
+  opacity:1;
+}
+
+.section{
+  padding:12px;
+  display:grid;
+  gap:12px;
+}
+@media(min-width:900px){
+  .section{grid-template-columns:1fr 1fr}
+}
+
 .card{
   background:var(--card);
   border-radius:14px;
   padding:14px;
 }
-.bar-row{
+
+.card h2{
+  margin:0 0 8px;
+  font-size:.95rem;
+  color:var(--accent);
+}
+
+.row{
   display:flex;
   align-items:center;
   gap:10px;
-  margin:10px 0;
+  margin:8px 0;
   cursor:pointer;
 }
-.bar-label{width:190px;font-size:.85rem}
-.bar{flex:1;height:12px;background:rgba(0,0,0,.15);border-radius:6px}
-.bar-fill{height:100%;border-radius:6px;background:var(--accent)}
-.bar-value{width:70px;text-align:right;font-weight:600}
+
+.label{width:190px;font-size:.85rem}
+.bar{flex:1;height:10px;background:rgba(0,0,0,.2);border-radius:5px}
+.fill{height:100%;background:var(--accent);border-radius:5px}
+.value{width:70px;text-align:right;font-weight:600}
 
 .drawer{
   position:fixed;
@@ -89,6 +125,7 @@ button,select{
   overflow:auto;
 }
 .drawer.active{transform:translateY(0)}
+
 .overlay{
   position:fixed;
   inset:0;
@@ -96,6 +133,7 @@ button,select{
   display:none;
 }
 .overlay.active{display:block}
+
 .stat-group h3{
   margin:14px 0 6px;
   color:var(--accent);
@@ -117,8 +155,13 @@ button,select{
   <button onclick="alternarTema()">🌓</button>
 </header>
 
+<div class="toggle">
+  <button id="btnHTFT" class="active">HT × FT</button>
+  <button id="btnMV">Mandante × Visitante</button>
+</div>
+
 <div class="controls">
-  <select id="metrica">
+  <select id="mercado">
     <option value="mediaGols">Média de gols</option>
     <option value="vitoriasMandante">Vitórias do mandante</option>
     <option value="vitoriasVisitante">Vitórias do visitante</option>
@@ -131,21 +174,27 @@ button,select{
     <option value="over25">Over 2.5 gols</option>
     <option value="under25">Under 2.5 gols</option>
   </select>
-
-  <select id="periodo">
-    <option value="FT">Tempo regulamentar</option>
-    <option value="HT">Primeiro tempo</option>
-  </select>
 </div>
 
 <div class="section">
-  <div class="card" id="ranking"></div>
+  <div class="card">
+    <h2 id="tituloA"></h2>
+    <div id="rankingA"></div>
+  </div>
+  <div class="card">
+    <h2 id="tituloB"></h2>
+    <div id="rankingB"></div>
+  </div>
 </div>
 
 <div class="overlay" id="overlay" onclick="fecharDrawer()"></div>
 <div class="drawer" id="drawer"></div>
 
 <script>
+/* =======================
+   DADOS (V2 ORIGINAIS)
+======================= */
+
 const ligas = {
   bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
   bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv'},
@@ -159,31 +208,36 @@ const ligas = {
   ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv'},
   eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'},
   portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv'},
-  scotland:{nome:'🏴 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
+  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
   belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
   turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
   greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'}
 };
 
-let cache = JSON.parse(localStorage.getItem('cacheLigas') || '{}');
+let cache = JSON.parse(localStorage.getItem('cacheLigas')||'{}');
 let dados = [];
+let modoAnalise = 'HTFT';
+
+/* =======================
+   CARREGAMENTO + CÁLCULO
+======================= */
 
 async function carregarTudo(){
-  dados = [];
+  dados=[];
   for(const k in ligas){
     if(!cache[k]){
-      const csv = await fetch('https://corsproxy.io/?' + encodeURIComponent(ligas[k].url)).then(r=>r.text());
-      cache[k] = csv;
-      localStorage.setItem('cacheLigas', JSON.stringify(cache));
+      const csv = await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+      cache[k]=csv;
+      localStorage.setItem('cacheLigas',JSON.stringify(cache));
     }
-    const parsed = Papa.parse(cache[k], {header:true});
-    dados.push(calcular(parsed.data, ligas[k].nome));
+    const parsed = Papa.parse(cache[k],{header:true});
+    dados.push(calcular(parsed.data,ligas[k].nome));
   }
   renderizar();
 }
 
-function calcular(rows, nome){
-  const jogos = rows.filter(r => r.FTR);
+function calcular(rows,nome){
+  const jogos = rows.filter(r=>r.FTR);
   let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0},
       ht={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
 
@@ -195,17 +249,10 @@ function calcular(rows, nome){
     const htg=(+j.HTHG||0)+(+j.HTAG||0);
 
     ft.g+=ftg; ht.g+=htg;
+    if(ftg===0)ft.z++; if(htg===0)ht.z++;
 
-    if(ftg===0)ft.z++;
-    if(htg===0)ht.z++;
-
-    if(ftg>=1)ft.o05++;
-    if(ftg>=2)ft.o15++;
-    if(ftg>=3)ft.o25++;
-
-    if(htg>=1)ht.o05++;
-    if(htg>=2)ht.o15++;
-    if(htg>=3)ht.o25++;
+    if(ftg>=1)ft.o05++; if(ftg>=2)ft.o15++; if(ftg>=3)ft.o25++;
+    if(htg>=1)ht.o05++; if(htg>=2)ht.o15++; if(htg>=3)ht.o25++;
   });
 
   const t=jogos.length;
@@ -240,62 +287,124 @@ function calcular(rows, nome){
   };
 }
 
+/* =======================
+   RENDERIZAÇÃO
+======================= */
+
 function renderizar(){
-  const m=metrica.value,p=periodo.value;
-  const max=Math.max(...dados.map(d=>+d[p][m]));
-  ranking.innerHTML='';
-  [...dados].sort((a,b)=>b[p][m]-a[p][m]).forEach(d=>{
-    const v=d[p][m];
-    const exibido=m==='mediaGols'?v:`${v}%`;
-    ranking.innerHTML+=`
-      <div class="bar-row" onclick="abrirDrawer('${d.nome}')">
-        <div class="bar-label">${d.nome}</div>
-        <div class="bar"><div class="bar-fill" style="width:${(v/max)*100}%"></div></div>
-        <div class="bar-value">${exibido}</div>
+  const m = mercado.value;
+
+  if(modoAnalise==='HTFT'){
+    tituloA.innerText=label(m,'HT');
+    tituloB.innerText=label(m,'FT');
+    renderRanking(rankingA,'HT',m);
+    renderRanking(rankingB,'FT',m);
+  } else {
+    tituloA.innerText=label(m,'Mandante');
+    tituloB.innerText=label(m,'Visitante');
+    renderRanking(rankingA,'FT',m,true);
+    renderRanking(rankingB,'FT',m,false);
+  }
+}
+
+function renderRanking(container,periodo,met,isMandante){
+  container.innerHTML='';
+  const valores=dados.map(d=>{
+    if(modoAnalise==='MV' && met.startsWith('vitorias')){
+      return isMandante?+d[periodo].vitoriasMandante:+d[periodo].vitoriasVisitante;
+    }
+    return +d[periodo][met];
+  });
+  const max=Math.max(...valores);
+
+  [...dados].sort((a,b)=>{
+    const va=valor(a,periodo,met,isMandante);
+    const vb=valor(b,periodo,met,isMandante);
+    return vb-va;
+  }).forEach(d=>{
+    const v=valor(d,periodo,met,isMandante);
+    const txt=met==='mediaGols'?v:`${v}%`;
+    container.innerHTML+=`
+      <div class="row" onclick="abrirDrawer('${d.nome}')">
+        <div class="label">${d.nome}</div>
+        <div class="bar"><div class="fill" style="width:${(v/max)*100}%"></div></div>
+        <div class="value">${txt}</div>
       </div>`;
   });
 }
 
-function abrirDrawer(nome){
-  const d=dados.find(x=>x.nome===nome);
-  const bloco=(t)=>`
-    <div class="stat-group">
-      <h3>${t==='FT'?'Tempo regulamentar':'Primeiro tempo'}</h3>
-      ${Object.entries(d[t]).map(([k,v])=>{
-        const label={
-          mediaGols:'Média de gols',
-          vitoriasMandante:'Vitórias do mandante',
-          vitoriasVisitante:'Vitórias do visitante',
-          empates:'Empates',
-          zeroZero:'Jogos 0x0',
-          over05:'Over 0.5',
-          under05:'Under 0.5',
-          over15:'Over 1.5',
-          under15:'Under 1.5',
-          over25:'Over 2.5',
-          under25:'Under 2.5'
-        }[k];
-        const val=k==='mediaGols'?v:`${v}%`;
-        return `<div class="stat"><span>${label}</span><span>${val}</span></div>`;
-      }).join('')}
-    </div>`;
-  drawer.innerHTML=`<h2>${nome}</h2>${bloco('FT')}${bloco('HT')}`;
-  drawer.classList.add('active');
-  overlay.classList.add('active');
+function valor(d,p,m,isMandante){
+  if(modoAnalise==='MV' && m==='vitoriasMandante')
+    return isMandante?+d[p].vitoriasMandante:+d[p].vitoriasVisitante;
+  if(modoAnalise==='MV' && m==='vitoriasVisitante')
+    return isMandante?+d[p].vitoriasMandante:+d[p].vitoriasVisitante;
+  return +d[p][m];
 }
 
-function fecharDrawer(){
-  drawer.classList.remove('active');
-  overlay.classList.remove('active');
+function label(m,eixo){
+  const l={
+    mediaGols:'Média de gols',
+    vitoriasMandante:'Vitórias do mandante',
+    vitoriasVisitante:'Vitórias do visitante',
+    empates:'Empates',
+    zeroZero:'Jogos 0x0',
+    over05:'Over 0.5 gols',
+    under05:'Under 0.5 gols',
+    over15:'Over 1.5 gols',
+    under15:'Under 1.5 gols',
+    over25:'Over 2.5 gols',
+    under25:'Under 2.5 gols'
+  };
+  return `${l[m]} — ${eixo}`;
 }
+
+/* =======================
+   UI
+======================= */
+
+btnHTFT.onclick=()=>{
+  modoAnalise='HTFT';
+  btnHTFT.classList.add('active');
+  btnMV.classList.remove('active');
+  renderizar();
+};
+btnMV.onclick=()=>{
+  modoAnalise='MV';
+  btnMV.classList.add('active');
+  btnHTFT.classList.remove('active');
+  renderizar();
+};
+
+mercado.onchange=renderizar;
 
 function alternarTema(){
   document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
 }
 
-metrica.onchange=periodo.onchange=renderizar;
+function abrirDrawer(nome){
+  const d=dados.find(x=>x.nome===nome);
+  drawer.innerHTML=`
+    <h2>${nome}</h2>
+    ${['FT','HT'].map(t=>`
+      <div class="stat-group">
+        <h3>${t==='FT'?'Tempo regulamentar':'Primeiro tempo'}</h3>
+        ${Object.entries(d[t]).map(([k,v])=>{
+          const lbl=label(k,'').replace(' — ','');
+          const val=k==='mediaGols'?v:`${v}%`;
+          return `<div class="stat"><span>${lbl}</span><span>${val}</span></div>`;
+        }).join('')}
+      </div>
+    `).join('')}
+  `;
+  drawer.classList.add('active');
+  overlay.classList.add('active');
+}
+function fecharDrawer(){
+  drawer.classList.remove('active');
+  overlay.classList.remove('active');
+}
 
-if('serviceWorker'in navigator){
+if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./service-worker.js');
 }
 
