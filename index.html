@@ -130,9 +130,6 @@ button,select{
 </div>
 
 <script>
-/* ======================
-   LIGAS + COBERTURA
-====================== */
 const ligas = {
   bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv',ht:true},
   bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv',ht:true},
@@ -146,7 +143,7 @@ const ligas = {
   ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv',ht:true},
   eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv',ht:true},
   portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv',ht:true},
-  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
+  scotland:{nome:'🏴 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
   belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
   turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
   greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
@@ -160,44 +157,42 @@ const ligas = {
 let dados=[];
 let modoAnalise='HTFT';
 
-/* ======================
-   CARREGAMENTO
-====================== */
 async function carregarTudo(){
   dados=[];
   for(const k in ligas){
-    const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
-    let rows=Papa.parse(csv,{header:true}).data;
+    const csv = await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+    let rows = Papa.parse(csv,{header:true}).data;
 
     if(ligas[k].season){
-      rows=rows.filter(r=>r.SEASON===ligas[k].season);
+      rows = rows.filter(r => r.SEASON === ligas[k].season);
     }
 
-    dados.push(calcular(rows,ligas[k].nome,ligas[k].ht));
+    dados.push(calcular(rows, ligas[k].nome, ligas[k].ht));
   }
   renderizar();
 }
 
-function calcular(rows,nome,temHT){
-  const jogos=rows.filter(r=>r.FTR);
+function calcular(rows, nome, temHT){
+  const jogos = rows.filter(r => r.FTR);
   let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0},
       ht={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
 
   jogos.forEach(j=>{
+    const HG = j.FTHG ?? j.HG ?? 0;
+    const AG = j.FTAG ?? j.AG ?? 0;
+
     if(j.FTR==='H')ft.vm++; else if(j.FTR==='A')ft.vv++; else ft.e++;
-    if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
 
-    const ftg=(+j.FTHG)+(+j.FTAG);
-    const htg=(+j.HTHG||0)+(+j.HTAG||0);
-
-    ft.g+=ftg; ht.g+=htg;
-    if(ftg===0)ft.z++; if(htg===0)ht.z++;
-
-    if(ftg>=1)ft.o05++; if(ftg>=2)ft.o15++; if(ftg>=3)ft.o25++;
-    if(htg>=1)ht.o05++; if(htg>=2)ht.o15++; if(htg>=3)ht.o25++;
+    const ftg = (+HG) + (+AG);
+    ft.g += ftg;
+    if(ftg===0)ft.z++;
+    if(ftg>=1)ft.o05++;
+    if(ftg>=2)ft.o15++;
+    if(ftg>=3)ft.o25++;
   });
 
-  const t=jogos.length;
+  const t = jogos.length || 1;
+
   return{
     nome,
     temHT,
@@ -214,25 +209,10 @@ function calcular(rows,nome,temHT){
       over25:(ft.o25/t*100).toFixed(1),
       under25:((t-ft.o25)/t*100).toFixed(1)
     },
-    HT: temHT ? {
-      mediaGols:(ht.g/t).toFixed(2),
-      vitoriasMandante:(ht.vm/t*100).toFixed(1),
-      vitoriasVisitante:(ht.vv/t*100).toFixed(1),
-      empates:(ht.e/t*100).toFixed(1),
-      zeroZero:(ht.z/t*100).toFixed(1),
-      over05:(ht.o05/t*100).toFixed(1),
-      under05:((t-ht.o05)/t*100).toFixed(1),
-      over15:(ht.o15/t*100).toFixed(1),
-      under15:((t-ht.o15)/t*100).toFixed(1),
-      over25:(ht.o25/t*100).toFixed(1),
-      under25:((t-ht.o25)/t*100).toFixed(1)
-    } : null
+    HT: null
   };
 }
 
-/* ======================
-   RENDER
-====================== */
 function renderizar(){
   const m=mercado.value;
 
@@ -240,7 +220,7 @@ function renderizar(){
     const lista=dados.filter(d=>d.temHT);
     tituloA.innerText=label(m,'HT');
     tituloB.innerText=label(m,'FT');
-    renderRanking(rankingA,lista,'HT',m);
+    renderRanking(rankingA,lista,'FT',m);
     renderRanking(rankingB,lista,'FT',m);
   }else{
     tituloA.innerText=label(m,'Mandante');
@@ -250,27 +230,19 @@ function renderizar(){
   }
 }
 
-function renderRanking(container,lista,periodo,met,isMandante){
+function renderRanking(container,lista,periodo,met){
   container.innerHTML='';
-  const max=Math.max(...lista.map(d=>valor(d,periodo,met,isMandante)));
-  lista.sort((a,b)=>valor(b,periodo,met,isMandante)-valor(a,periodo,met,isMandante))
-    .forEach(d=>{
-      const v=valor(d,periodo,met,isMandante);
-      const txt=met==='mediaGols'?v:`${v}%`;
-      container.innerHTML+=`
-        <div class="row">
-          <div class="label">${d.nome}</div>
-          <div class="bar"><div class="fill" style="width:${(v/max)*100}%"></div></div>
-          <div class="value">${txt}</div>
-        </div>`;
-    });
-}
-
-function valor(d,p,m,isMandante){
-  if(modoAnalise==='MV' && m.startsWith('vitorias')){
-    return isMandante?+d[p].vitoriasMandante:+d[p].vitoriasVisitante;
-  }
-  return +d[p][m];
+  const max=Math.max(...lista.map(d=>+d[periodo][met]));
+  lista.sort((a,b)=>+b[periodo][met]-+a[periodo][met]).forEach(d=>{
+    const v=d[periodo][met];
+    const txt=met==='mediaGols'?v:`${v}%`;
+    container.innerHTML+=`
+      <div class="row">
+        <div class="label">${d.nome}</div>
+        <div class="bar"><div class="fill" style="width:${(v/max)*100}%"></div></div>
+        <div class="value">${txt}</div>
+      </div>`;
+  });
 }
 
 function label(m,eixo){
@@ -290,12 +262,10 @@ function label(m,eixo){
   return `${l[m]} — ${eixo}`;
 }
 
-/* ======================
-   UI
-====================== */
 btnHTFT.onclick=()=>{modoAnalise='HTFT';btnHTFT.classList.add('active');btnMV.classList.remove('active');renderizar();}
 btnMV.onclick=()=>{modoAnalise='MV';btnMV.classList.add('active');btnHTFT.classList.remove('active');renderizar();}
 mercado.onchange=renderizar;
+
 function alternarTema(){
   document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark';
 }
