@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparativo Europeu – V3</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<style>
+:root{
+  --bg:#0d1b2a;
+  --card:#1b263b;
+  --accent:#00aaff;
+  --text:#e0e1dd;
+  --muted:#9aa4b2;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+header{
+  padding:16px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+header h1{
+  margin:0;
+  color:var(--accent);
+  font-size:1.2rem;
+}
+.controls{
+  padding:12px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+select{
+  padding:10px 12px;
+  border-radius:10px;
+  border:none;
+  background:var(--card);
+  color:var(--text);
+  font-size:.95rem;
+}
+.tabs{
+  display:flex;
+  padding:0 12px 12px;
+  gap:8px;
+}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:10px;
+  border-radius:10px;
+  background:var(--card);
+  cursor:pointer;
+  opacity:.6;
+}
+.tab.active{
+  opacity:1;
+  background:var(--accent);
+  color:#000;
+  font-weight:600;
+}
+.section{
+  padding:12px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+@media(min-width:900px){
+  .section{grid-template-columns:1fr 1fr}
+}
+.card{
+  background:var(--card);
+  border-radius:14px;
+  padding:14px;
+}
+.card h2{
+  margin:0 0 8px;
+  font-size:.95rem;
+  color:var(--accent);
+}
+.row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:8px 0;
+}
+.label{width:150px;font-size:.85rem}
+.bar{
+  flex:1;
+  height:10px;
+  background:rgba(0,0,0,.2);
+  border-radius:5px;
+}
+.fill{
+  height:100%;
+  border-radius:5px;
+  background:var(--accent);
+}
+.value{
+  width:60px;
+  text-align:right;
+  font-weight:600;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Comparativo Europeu — V3</h1>
+</header>
+
+<div class="controls">
+  <select id="mercado">
+    <option value="over25">Over 2.5 gols</option>
+    <option value="under25">Under 2.5 gols</option>
+    <option value="over15">Over 1.5 gols</option>
+    <option value="under15">Under 1.5 gols</option>
+    <option value="vitoriasMandante">Vitórias do mandante</option>
+    <option value="vitoriasVisitante">Vitórias do visitante</option>
+  </select>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-periodo="FT">Tempo regulamentar</div>
+  <div class="tab" data-periodo="HT">Primeiro tempo</div>
+</div>
+
+<div class="section">
+  <div class="card">
+    <h2 id="tituloPrincipal"></h2>
+    <div id="rankingPrincipal"></div>
+  </div>
+
+  <div class="card">
+    <h2 id="tituloSecundario"></h2>
+    <div id="rankingSecundario"></div>
+  </div>
+</div>
+
+<script>
+const ligas={
+  bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
+  premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
+  laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv'},
+  seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv'},
+  ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv'},
+  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'}
+};
+
+let dados=[];
+let periodoAtivo='FT';
+
+async function carregar(){
+  dados=[];
+  for(const k in ligas){
+    const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+    const parsed=Papa.parse(csv,{header:true});
+    dados.push(calcular(parsed.data,ligas[k].nome));
+  }
+  render();
+}
+
+function calcular(rows,nome){
+  const jogos=rows.filter(r=>r.FTR);
+  let ft={vm:0,vv:0,o15:0,o25:0},
+      ht={vm:0,vv:0,o15:0,o25:0};
+
+  jogos.forEach(j=>{
+    if(j.FTR==='H')ft.vm++;
+    if(j.FTR==='A')ft.vv++;
+    if(j.HTR==='H')ht.vm++;
+    if(j.HTR==='A')ht.vv++;
+
+    const ftg=(+j.FTHG)+(+j.FTAG);
+    const htg=(+j.HTHG||0)+(+j.HTAG||0);
+
+    if(ftg>=2)ft.o15++;
+    if(ftg>=3)ft.o25++;
+    if(htg>=2)ht.o15++;
+    if(htg>=3)ht.o25++;
+  });
+
+  const t=jogos.length;
+  return{
+    nome,
+    FT:{
+      over15:(ft.o15/t*100).toFixed(1),
+      under15:((t-ft.o15)/t*100).toFixed(1),
+      over25:(ft.o25/t*100).toFixed(1),
+      under25:((t-ft.o25)/t*100).toFixed(1),
+      vitoriasMandante:(ft.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ft.vv/t*100).toFixed(1)
+    },
+    HT:{
+      over15:(ht.o15/t*100).toFixed(1),
+      under15:((t-ht.o15)/t*100).toFixed(1),
+      over25:(ht.o25/t*100).toFixed(1),
+      under25:((t-ht.o25)/t*100).toFixed(1),
+      vitoriasMandante:(ht.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ht.vv/t*100).toFixed(1)
+    }
+  };
+}
+
+function mercadoOposto(m){
+  const mapa={
+    over25:'under25',under25:'over25',
+    over15:'under15',under15:'over15'
+  };
+  return mapa[m]||m;
+}
+
+function render(){
+  const m=mercado.value;
+  const m2=mercadoOposto(m);
+
+  tituloPrincipal.innerText=label(m,periodoAtivo);
+  tituloSecundario.innerText=label(m2,periodoAtivo);
+
+  renderRanking(rankingPrincipal,m);
+  renderRanking(rankingSecundario,m2);
+}
+
+function renderRanking(container,met){
+  container.innerHTML='';
+  const max=Math.max(...dados.map(d=>+d[periodoAtivo][met]));
+  [...dados].sort((a,b)=>b[periodoAtivo][met]-a[periodoAtivo][met]).forEach(d=>{
+    const v=d[periodoAtivo][met];
+    container.innerHTML+=`
+      <div class="row">
+        <div class="label">${d.nome}</div>
+        <div class="bar"><div class="fill" style="width:${(v/max)*100}%"></div></div>
+        <div class="value">${v}%</div>
+      </div>`;
+  });
+}
+
+function label(m,p){
+  const l={
+    over25:'Over 2.5 gols',
+    under25:'Under 2.5 gols',
+    over15:'Over 1.5 gols',
+    under15:'Under 1.5 gols',
+    vitoriasMandante:'Vitórias do mandante',
+    vitoriasVisitante:'Vitórias do visitante'
+  };
+  return `${l[m]} — ${p}`;
+}
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    periodoAtivo=t.dataset.periodo;
+    render();
+  };
+});
+
+mercado.onchange=render;
+
+carregar();
+</script>
+
+</body>
+</html>
