@@ -72,7 +72,7 @@ button,select{
   margin:10px 0;
   cursor:pointer;
 }
-.bar-label{width:170px;font-size:.85rem}
+.bar-label{width:190px;font-size:.85rem}
 .bar{flex:1;height:12px;background:rgba(0,0,0,.15);border-radius:6px}
 .bar-fill{height:100%;border-radius:6px;background:var(--accent)}
 .bar-value{width:70px;text-align:right;font-weight:600}
@@ -120,9 +120,14 @@ button,select{
 <div class="controls">
   <select id="metrica">
     <option value="mediaGols">Média de gols</option>
+    <option value="vitoriasMandante">Vitórias do mandante</option>
+    <option value="vitoriasVisitante">Vitórias do visitante</option>
+    <option value="empates">Empates</option>
     <option value="zeroZero">Jogos 0x0</option>
     <option value="over05">Over 0.5 gols</option>
+    <option value="under05">Under 0.5 gols</option>
     <option value="over15">Over 1.5 gols</option>
+    <option value="under15">Under 1.5 gols</option>
     <option value="over25">Over 2.5 gols</option>
     <option value="under25">Under 2.5 gols</option>
   </select>
@@ -141,7 +146,7 @@ button,select{
 <div class="drawer" id="drawer"></div>
 
 <script>
-const ligas = {...JSON.parse(JSON.stringify({
+const ligas = {
   bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
   bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv'},
   premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
@@ -158,7 +163,7 @@ const ligas = {...JSON.parse(JSON.stringify({
   belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
   turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
   greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'}
-}))};
+};
 
 let cache = JSON.parse(localStorage.getItem('cacheLigas') || '{}');
 let dados = [];
@@ -179,44 +184,56 @@ async function carregarTudo(){
 
 function calcular(rows, nome){
   const jogos = rows.filter(r => r.FTR);
-  let ft={g:0,z:0,o05:0,o15:0,o25:0},
-      ht={g:0,z:0,o05:0,o15:0,o25:0};
+  let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0},
+      ht={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
 
   jogos.forEach(j=>{
-    const ftg = (+j.FTHG) + (+j.FTAG);
-    const htg = (+j.HTHG||0) + (+j.HTAG||0);
+    if(j.FTR==='H')ft.vm++; else if(j.FTR==='A')ft.vv++; else ft.e++;
+    if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
 
-    ft.g += ftg;
-    ht.g += htg;
+    const ftg=(+j.FTHG)+(+j.FTAG);
+    const htg=(+j.HTHG||0)+(+j.HTAG||0);
 
-    if(ftg===0) ft.z++;
-    if(htg===0) ht.z++;
+    ft.g+=ftg; ht.g+=htg;
 
-    if(ftg>=1) ft.o05++;
-    if(ftg>=2) ft.o15++;
-    if(ftg>=3) ft.o25++;
+    if(ftg===0)ft.z++;
+    if(htg===0)ht.z++;
 
-    if(htg>=1) ht.o05++;
-    if(htg>=2) ht.o15++;
-    if(htg>=3) ht.o25++;
+    if(ftg>=1)ft.o05++;
+    if(ftg>=2)ft.o15++;
+    if(ftg>=3)ft.o25++;
+
+    if(htg>=1)ht.o05++;
+    if(htg>=2)ht.o15++;
+    if(htg>=3)ht.o25++;
   });
 
-  const t = jogos.length;
+  const t=jogos.length;
   return{
     nome,
     FT:{
       mediaGols:(ft.g/t).toFixed(2),
+      vitoriasMandante:(ft.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ft.vv/t*100).toFixed(1),
+      empates:(ft.e/t*100).toFixed(1),
       zeroZero:(ft.z/t*100).toFixed(1),
       over05:(ft.o05/t*100).toFixed(1),
+      under05:((t-ft.o05)/t*100).toFixed(1),
       over15:(ft.o15/t*100).toFixed(1),
+      under15:((t-ft.o15)/t*100).toFixed(1),
       over25:(ft.o25/t*100).toFixed(1),
       under25:((t-ft.o25)/t*100).toFixed(1)
     },
     HT:{
       mediaGols:(ht.g/t).toFixed(2),
+      vitoriasMandante:(ht.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ht.vv/t*100).toFixed(1),
+      empates:(ht.e/t*100).toFixed(1),
       zeroZero:(ht.z/t*100).toFixed(1),
       over05:(ht.o05/t*100).toFixed(1),
+      under05:((t-ht.o05)/t*100).toFixed(1),
       over15:(ht.o15/t*100).toFixed(1),
+      under15:((t-ht.o15)/t*100).toFixed(1),
       over25:(ht.o25/t*100).toFixed(1),
       under25:((t-ht.o25)/t*100).toFixed(1)
     }
@@ -241,29 +258,28 @@ function renderizar(){
 
 function abrirDrawer(nome){
   const d=dados.find(x=>x.nome===nome);
-  drawer.innerHTML=`
-    <h2>${nome}</h2>
-
+  const bloco=(t)=>`
     <div class="stat-group">
-      <h3>Tempo regulamentar</h3>
-      <div class="stat"><span>Média de gols</span><span>${d.FT.mediaGols}</span></div>
-      <div class="stat"><span>0x0</span><span>${d.FT.zeroZero}%</span></div>
-      <div class="stat"><span>Over 0.5</span><span>${d.FT.over05}%</span></div>
-      <div class="stat"><span>Over 1.5</span><span>${d.FT.over15}%</span></div>
-      <div class="stat"><span>Over 2.5</span><span>${d.FT.over25}%</span></div>
-      <div class="stat"><span>Under 2.5</span><span>${d.FT.under25}%</span></div>
-    </div>
-
-    <div class="stat-group">
-      <h3>Primeiro tempo</h3>
-      <div class="stat"><span>Média de gols</span><span>${d.HT.mediaGols}</span></div>
-      <div class="stat"><span>0x0</span><span>${d.HT.zeroZero}%</span></div>
-      <div class="stat"><span>Over 0.5</span><span>${d.HT.over05}%</span></div>
-      <div class="stat"><span>Over 1.5</span><span>${d.HT.over15}%</span></div>
-      <div class="stat"><span>Over 2.5</span><span>${d.HT.over25}%</span></div>
-      <div class="stat"><span>Under 2.5</span><span>${d.HT.under25}%</span></div>
-    </div>
-  `;
+      <h3>${t==='FT'?'Tempo regulamentar':'Primeiro tempo'}</h3>
+      ${Object.entries(d[t]).map(([k,v])=>{
+        const label={
+          mediaGols:'Média de gols',
+          vitoriasMandante:'Vitórias do mandante',
+          vitoriasVisitante:'Vitórias do visitante',
+          empates:'Empates',
+          zeroZero:'Jogos 0x0',
+          over05:'Over 0.5',
+          under05:'Under 0.5',
+          over15:'Over 1.5',
+          under15:'Under 1.5',
+          over25:'Over 2.5',
+          under25:'Under 2.5'
+        }[k];
+        const val=k==='mediaGols'?v:`${v}%`;
+        return `<div class="stat"><span>${label}</span><span>${val}</span></div>`;
+      }).join('')}
+    </div>`;
+  drawer.innerHTML=`<h2>${nome}</h2>${bloco('FT')}${bloco('HT')}`;
   drawer.classList.add('active');
   overlay.classList.add('active');
 }
