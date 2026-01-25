@@ -22,13 +22,14 @@ button,select{padding:8px 10px;border:none;border-radius:10px;background:var(--c
 .card{background:var(--card);border-radius:14px;padding:14px}
 .card h2{margin:0 0 10px;font-size:.9rem;color:var(--accent)}
 .row{display:flex;gap:8px;align-items:center;margin:6px 0}
-.label{width:210px;font-size:.85rem}
+.label{width:220px;font-size:.85rem}
 .bar{flex:1;height:8px;background:rgba(0,0,0,.25);border-radius:4px}
 .fill{height:100%;background:var(--accent);border-radius:4px}
 .value{width:60px;text-align:right;font-weight:600}
-.note{opacity:.7;font-size:.85rem;line-height:1.4}
+.note{opacity:.7;font-size:.85rem}
 </style>
 </head>
+
 <body data-theme="dark">
 <header>
   <h1>Comparativo Europeu</h1>
@@ -42,19 +43,7 @@ button,select{padding:8px 10px;border:none;border-radius:10px;background:var(--c
 </div>
 
 <div class="controls">
-  <select id="mercado">
-    <option value="mediaGols">Média de gols</option>
-    <option value="zeroZero">Jogos 0x0</option>
-    <option value="over05">Over 0.5 gols</option>
-    <option value="under05">Under 0.5 gols</option>
-    <option value="over15">Over 1.5 gols</option>
-    <option value="under15">Under 1.5 gols</option>
-    <option value="over25">Over 2.5 gols</option>
-    <option value="under25">Under 2.5 gols</option>
-    <option value="vitoriasMandante">Vitórias do mandante</option>
-    <option value="vitoriasVisitante">Vitórias do visitante</option>
-    <option value="empates">Empates</option>
-  </select>
+  <select id="mercado"></select>
 </div>
 
 <div class="section">
@@ -69,6 +58,26 @@ button,select{padding:8px 10px;border:none;border-radius:10px;background:var(--c
 </div>
 
 <script>
+const mercados = {
+  FT:['mediaGols','zeroZero','over05','under05','over15','under15','over25','under25','vitoriasMandante','vitoriasVisitante','empates'],
+  HTFT:['mediaGols','zeroZero','over05','under05','over15','under15','over25','under25','vitoriasMandante','vitoriasVisitante','empates'],
+  MV:['vitoriasMandante','vitoriasVisitante','empates']
+};
+
+const labels={
+  mediaGols:'Média de gols',
+  zeroZero:'Jogos 0x0',
+  over05:'Over 0.5 gols',
+  under05:'Under 0.5 gols',
+  over15:'Over 1.5 gols',
+  under15:'Under 1.5 gols',
+  over25:'Over 2.5 gols',
+  under25:'Under 2.5 gols',
+  vitoriasMandante:'Vitórias do mandante',
+  vitoriasVisitante:'Vitórias do visitante',
+  empates:'Empates'
+};
+
 const ligas={
   bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv',ht:true},
   bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv',ht:true},
@@ -94,142 +103,98 @@ const ligas={
 
 let dados=[],aba='FT';
 
+function setMercados(){
+  mercado.innerHTML='';
+  mercados[aba].forEach(m=>{
+    const o=document.createElement('option');
+    o.value=m;o.textContent=labels[m];
+    mercado.appendChild(o);
+  });
+}
+
 async function carregar(){
-  dados=[];
   for(const k in ligas){
     const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
     let rows=Papa.parse(csv,{header:true}).data;
     if(ligas[k].season) rows=rows.filter(r=>r.SEASON===ligas[k].season);
-    dados.push(calcular(rows,ligas[k]));
+    dados.push(calc(rows,ligas[k]));
   }
+  setMercados();
   render();
 }
 
-function calcular(rows,liga){
+function calc(rows,liga){
   const jogos=rows.filter(r=>r.FTR);
   let ft={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
   let ht={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
   jogos.forEach(j=>{
-    const hg=j.FTHG??j.HG??0, ag=j.FTAG??j.AG??0;
+    const hg=j.FTHG??j.HG??0,ag=j.FTAG??j.AG??0;
     const tg=(+hg)+(+ag);
-    ft.g+=tg;
-    if(tg===0)ft.z++;
-    if(tg>=1)ft.o05++;
-    if(tg>=2)ft.o15++;
-    if(tg>=3)ft.o25++;
-    if(j.FTR==='H')ft.vm++; else if(j.FTR==='A')ft.vv++; else ft.e++;
+    ft.g+=tg;if(tg===0)ft.z++;if(tg>=1)ft.o05++;if(tg>=2)ft.o15++;if(tg>=3)ft.o25++;
+    if(j.FTR==='H')ft.vm++;else if(j.FTR==='A')ft.vv++;else ft.e++;
     if(liga.ht){
       const htg=(+(j.HTHG||0))+(+(j.HTAG||0));
-      ht.g+=htg;
-      if(htg===0)ht.z++;
-      if(htg>=1)ht.o05++;
-      if(htg>=2)ht.o15++;
-      if(htg>=3)ht.o25++;
-      if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
+      ht.g+=htg;if(htg===0)ht.z++;if(htg>=1)ht.o05++;if(htg>=2)ht.o15++;if(htg>=3)ht.o25++;
+      if(j.HTR==='H')ht.vm++;else if(j.HTR==='A')ht.vv++;else ht.e++;
     }
   });
   const t=jogos.length||1;
+  const pct=x=>(x/t*100).toFixed(1);
   return{
     nome:liga.nome,ht:liga.ht,
-    FT:{
-      mediaGols:(ft.g/t).toFixed(2),
-      zeroZero:(ft.z/t*100).toFixed(1),
-      over05:(ft.o05/t*100).toFixed(1),
-      under05:((t-ft.o05)/t*100).toFixed(1),
-      over15:(ft.o15/t*100).toFixed(1),
-      under15:((t-ft.o15)/t*100).toFixed(1),
-      over25:(ft.o25/t*100).toFixed(1),
-      under25:((t-ft.o25)/t*100).toFixed(1),
-      vitoriasMandante:(ft.vm/t*100).toFixed(1),
-      vitoriasVisitante:(ft.vv/t*100).toFixed(1),
-      empates:(ft.e/t*100).toFixed(1)
-    },
-    HT: liga.ht ? {
-      mediaGols:(ht.g/t).toFixed(2),
-      zeroZero:(ht.z/t*100).toFixed(1),
-      over05:(ht.o05/t*100).toFixed(1),
-      under05:((t-ht.o05)/t*100).toFixed(1),
-      over15:(ht.o15/t*100).toFixed(1),
-      under15:((t-ht.o15)/t*100).toFixed(1),
-      over25:(ht.o25/t*100).toFixed(1),
-      under25:((t-ht.o25)/t*100).toFixed(1),
-      vitoriasMandante:(ht.vm/t*100).toFixed(1),
-      vitoriasVisitante:(ht.vv/t*100).toFixed(1),
-      empates:(ht.e/t*100).toFixed(1)
-    }:null
+    FT:{mediaGols:(ft.g/t).toFixed(2),zeroZero:pct(ft.z),over05:pct(ft.o05),under05:pct(t-ft.o05),
+        over15:pct(ft.o15),under15:pct(t-ft.o15),over25:pct(ft.o25),under25:pct(t-ft.o25),
+        vitoriasMandante:pct(ft.vm),vitoriasVisitante:pct(ft.vv),empates:pct(ft.e)},
+    HT:liga.ht?{mediaGols:(ht.g/t).toFixed(2),zeroZero:pct(ht.z),over05:pct(ht.o05),under05:pct(t-ht.o05),
+        over15:pct(ht.o15),under15:pct(t-ht.o15),over25:pct(ht.o25),under25:pct(t-ht.o25),
+        vitoriasMandante:pct(ht.vm),vitoriasVisitante:pct(ht.vv),empates:pct(ht.e)}:null
   };
 }
 
 function render(){
-  const m=mercado.value;
   rankingA.innerHTML='';rankingB.innerHTML='';
+  const m=mercado.value;
   if(aba==='FT'){
-    tituloA.innerText=titulo(m,'FT');
-    tituloB.innerText=colunaDireita(m);
-    const lista=[...dados].sort((a,b)=>b.FT[m]-a.FT[m]);
-    const max=Math.max(...lista.map(d=>+d.FT[m]));
-    lista.forEach(d=>rankingA.innerHTML+=linha(d.nome,d.FT[m],max,m==='mediaGols'));
-    if(m.startsWith('over')){
-      const um=m.replace('over','under');
-      const listaB=[...dados].sort((a,b)=>b.FT[um]-a.FT[um]);
-      listaB.forEach(d=>rankingB.innerHTML+=linha(d.nome,d.FT[um],100,false));
-    }else{
-      rankingB.innerHTML='<div class="note">Contexto do mercado no tempo regulamentar.</div>';
-    }
+    tituloA.textContent=labels[m]+' — FT';
+    tituloB.textContent=m.startsWith('over')?'Complemento':'Contexto';
+    const l=[...dados].sort((a,b)=>b.FT[m]-a.FT[m]);
+    const max=Math.max(...l.map(d=>+d.FT[m]));
+    l.forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT[m],max,m==='mediaGols'));
+    rankingB.innerHTML='<div class="note">Leitura complementar do tempo regulamentar.</div>';
   }
   if(aba==='HTFT'){
-    const lista=dados.filter(d=>d.ht);
-    tituloA.innerText=titulo(m,'HT');
-    tituloB.innerText=titulo(m,'FT');
-    const maxHT=Math.max(...lista.map(d=>+d.HT[m]));
-    const maxFT=Math.max(...lista.map(d=>+d.FT[m]));
-    [...lista].sort((a,b)=>b.HT[m]-a.HT[m]).forEach(d=>rankingA.innerHTML+=linha(d.nome,d.HT[m],maxHT,m==='mediaGols'));
-    [...lista].sort((a,b)=>b.FT[m]-a.FT[m]).forEach(d=>rankingB.innerHTML+=linha(d.nome,d.FT[m],maxFT,m==='mediaGols'));
+    const l=dados.filter(d=>d.ht);
+    tituloA.textContent=labels[m]+' — HT';
+    tituloB.textContent=labels[m]+' — FT';
+    const maxHT=Math.max(...l.map(d=>+d.HT[m]));
+    const maxFT=Math.max(...l.map(d=>+d.FT[m]));
+    [...l].sort((a,b)=>b.HT[m]-a.HT[m]).forEach(d=>rankingA.innerHTML+=row(d.nome,d.HT[m],maxHT,m==='mediaGols'));
+    [...l].sort((a,b)=>b.FT[m]-a.FT[m]).forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT[m],maxFT,m==='mediaGols'));
   }
   if(aba==='MV'){
-    tituloA.innerText='Vitórias do mandante (FT)';
-    tituloB.innerText='Vitórias do visitante (FT)';
+    tituloA.textContent='Vitórias do mandante — FT';
+    tituloB.textContent='Vitórias do visitante — FT';
     const maxA=Math.max(...dados.map(d=>+d.FT.vitoriasMandante));
     const maxB=Math.max(...dados.map(d=>+d.FT.vitoriasVisitante));
     [...dados].sort((a,b)=>b.FT.vitoriasMandante-a.FT.vitoriasMandante)
-      .forEach(d=>rankingA.innerHTML+=linha(d.nome,d.FT.vitoriasMandante,maxA,false));
+      .forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT.vitoriasMandante,maxA,false));
     [...dados].sort((a,b)=>b.FT.vitoriasVisitante-a.FT.vitoriasVisitante)
-      .forEach(d=>rankingB.innerHTML+=linha(d.nome,d.FT.vitoriasVisitante,maxB,false));
+      .forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT.vitoriasVisitante,maxB,false));
   }
 }
 
-function linha(nome,valor,max,isMedia){
-  const w=(valor/max)*100;
-  return `<div class="row"><div class="label">${nome}</div><div class="bar"><div class="fill" style="width:${w}%"></div></div><div class="value">${isMedia?valor:valor+'%'}</div></div>`;
+function row(nome,val,max,isMedia){
+  return `<div class="row"><div class="label">${nome}</div><div class="bar"><div class="fill" style="width:${(val/max)*100}%"></div></div><div class="value">${isMedia?val:val+'%'}</div></div>`;
 }
 
-function titulo(m,e){
-  const t={
-    mediaGols:'Média de gols',
-    zeroZero:'Jogos 0x0',
-    over05:'Over 0.5 gols',
-    under05:'Under 0.5 gols',
-    over15:'Over 1.5 gols',
-    under15:'Under 1.5 gols',
-    over25:'Over 2.5 gols',
-    under25:'Under 2.5 gols',
-    vitoriasMandante:'Vitórias do mandante',
-    vitoriasVisitante:'Vitórias do visitante',
-    empates:'Empates'
-  };
-  return `${t[m]} — ${e}`;
-}
-function colunaDireita(m){
-  if(m.startsWith('over')) return m.replace('over','Under ')+' (FT)';
-  return 'Contexto';
-}
-
-tabFT.onclick=()=>{aba='FT';setTab(tabFT)};
-tabHTFT.onclick=()=>{aba='HTFT';setTab(tabHTFT)};
-tabMV.onclick=()=>{aba='MV';setTab(tabMV)};
-function setTab(btn){
+tabFT.onclick=()=>{aba='FT';activate(tabFT)};
+tabHTFT.onclick=()=>{aba='HTFT';activate(tabHTFT)};
+tabMV.onclick=()=>{aba='MV';activate(tabMV)};
+function activate(btn){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');render();
+  btn.classList.add('active');
+  setMercados();
+  render();
 }
 mercado.onchange=render;
 function alternarTema(){document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark'}
