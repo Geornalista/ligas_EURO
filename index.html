@@ -16,7 +16,7 @@
 }
 [data-theme="light"]{
   --bg:#f4f6f8;
-  --card:#fff;
+  --card:#ffffff;
   --accent:#005fcc;
   --text:#1b263b
 }
@@ -182,10 +182,10 @@ const ligas={
   turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
   greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
 
-  denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',season:'2025/2026',ht:false},
-  switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',season:'2025/2026',ht:false},
-  norway:{nome:'🇳🇴 NORUEGA',url:'https://www.football-data.co.uk/new/NOR.csv',season:'2025',ht:false},
-  sweden:{nome:'🇸🇪 SUÉCIA',url:'https://www.football-data.co.uk/new/SWE.csv',season:'2025',ht:false}
+  denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',ht:false},
+  switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',ht:false},
+  norway:{nome:'🇳🇴 NORUEGA',url:'https://www.football-data.co.uk/new/NOR.csv',ht:false},
+  sweden:{nome:'🇸🇪 SUÉCIA',url:'https://www.football-data.co.uk/new/SWE.csv',ht:false}
 };
 
 let dados=[],aba='FT';
@@ -206,12 +206,7 @@ async function carregar(){
       'https://corsproxy.io/?' + encodeURIComponent(ligas[k].url)
     ).then(r=>r.text());
 
-    let rows = Papa.parse(csv,{header:true}).data;
-
-    if(ligas[k].season && rows.length && rows[0].SEASON){
-      rows = rows.filter(r => r.SEASON === ligas[k].season);
-    }
-
+    const rows = Papa.parse(csv,{header:true}).data;
     dados.push(calc(rows,ligas[k]));
   }
   setMercados();
@@ -219,15 +214,21 @@ async function carregar(){
 }
 
 function calc(rows,liga){
-  const jogos = rows.filter(r=>r.FTR);
+  const jogos = rows.filter(r=>{
+    const hg = r.FTHG ?? r.HG;
+    const ag = r.FTAG ?? r.AG;
+    return hg !== undefined && ag !== undefined && hg !== '' && ag !== '';
+  });
 
   let ft={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
   let ht={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
 
   jogos.forEach(j=>{
-    const hg=j.FTHG??j.HG??0;
-    const ag=j.FTAG??j.AG??0;
-    const tg=(+hg)+(+ag);
+    const hg = j.FTHG ?? j.HG;
+    const ag = j.FTAG ?? j.AG;
+    const tg = (+hg)+(+ag);
+
+    const resultado = j.FTR || j.Res;
 
     ft.g+=tg;
     if(tg===0)ft.z++;
@@ -235,9 +236,9 @@ function calc(rows,liga){
     if(tg>=2)ft.o15++;
     if(tg>=3)ft.o25++;
 
-    if(j.FTR==='H')ft.vm++;
-    else if(j.FTR==='A')ft.vv++;
-    else ft.e++;
+    if(resultado==='H')ft.vm++;
+    else if(resultado==='A')ft.vv++;
+    else if(resultado==='D')ft.e++;
 
     if(liga.ht){
       const htg=(+(j.HTHG||0))+(+(j.HTAG||0));
@@ -249,7 +250,7 @@ function calc(rows,liga){
 
       if(j.HTR==='H')ht.vm++;
       else if(j.HTR==='A')ht.vv++;
-      else ht.e++;
+      else if(j.HTR==='D')ht.e++;
     }
   });
 
