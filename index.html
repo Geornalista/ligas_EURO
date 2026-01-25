@@ -101,7 +101,8 @@ button,select{
 .fill{
   height:100%;
   background:var(--accent);
-  border-radius:4px
+  border-radius:4px;
+  transition:width .3s ease
 }
 .value{
   width:60px;
@@ -181,7 +182,6 @@ const ligas={
   belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
   turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
   greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
-
   denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',ht:false},
   switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',ht:false},
   norway:{nome:'🇳🇴 NORUEGA',url:'https://www.football-data.co.uk/new/NOR.csv',ht:false},
@@ -227,7 +227,6 @@ function calc(rows,liga){
     const hg = j.FTHG ?? j.HG;
     const ag = j.FTAG ?? j.AG;
     const tg = (+hg)+(+ag);
-
     const resultado = j.FTR || j.Res;
 
     ft.g+=tg;
@@ -243,14 +242,6 @@ function calc(rows,liga){
     if(liga.ht){
       const htg=(+(j.HTHG||0))+(+(j.HTAG||0));
       ht.g+=htg;
-      if(htg===0)ht.z++;
-      if(htg>=1)ht.o05++;
-      if(htg>=2)ht.o15++;
-      if(htg>=3)ht.o25++;
-
-      if(j.HTR==='H')ht.vm++;
-      else if(j.HTR==='A')ht.vv++;
-      else if(j.HTR==='D')ht.e++;
     }
   });
 
@@ -272,20 +263,7 @@ function calc(rows,liga){
       vitoriasMandante:pct(ft.vm),
       vitoriasVisitante:pct(ft.vv),
       empates:pct(ft.e)
-    },
-    HT:liga.ht?{
-      mediaGols:(ht.g/t).toFixed(2),
-      zeroZero:pct(ht.z),
-      over05:pct(ht.o05),
-      under05:pct(t-ht.o05),
-      over15:pct(ht.o15),
-      under15:pct(t-ht.o15),
-      over25:pct(ht.o25),
-      under25:pct(t-ht.o25),
-      vitoriasMandante:pct(ht.vm),
-      vitoriasVisitante:pct(ht.vv),
-      empates:pct(ht.e)
-    }:null
+    }
   };
 }
 
@@ -307,43 +285,18 @@ function render(){
 
     rankingB.innerHTML='<div class="note">Leitura complementar do tempo regulamentar.</div>';
   }
-
-  if(aba==='HTFT'){
-    const l=dados.filter(d=>d.ht);
-    tituloA.textContent=labels[m]+' — HT';
-    tituloB.textContent=labels[m]+' — FT';
-
-    const maxHT=Math.max(...l.map(d=>+d.HT[m]));
-    const maxFT=Math.max(...l.map(d=>+d.FT[m]));
-
-    [...l].sort((a,b)=>b.HT[m]-a.HT[m])
-      .forEach(d=>rankingA.innerHTML+=row(d.nome,d.HT[m],maxHT,m==='mediaGols'));
-
-    [...l].sort((a,b)=>b.FT[m]-a.FT[m])
-      .forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT[m],maxFT,m==='mediaGols'));
-  }
-
-  if(aba==='MV'){
-    tituloA.textContent='Vitórias do mandante — FT';
-    tituloB.textContent='Vitórias do visitante — FT';
-
-    const maxA=Math.max(...dados.map(d=>+d.FT.vitoriasMandante));
-    const maxB=Math.max(...dados.map(d=>+d.FT.vitoriasVisitante));
-
-    [...dados].sort((a,b)=>b.FT.vitoriasMandante-a.FT.vitoriasMandante)
-      .forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT.vitoriasMandante,maxA,false));
-
-    [...dados].sort((a,b)=>b.FT.vitoriasVisitante-a.FT.vitoriasVisitante)
-      .forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT.vitoriasVisitante,maxB,false));
-  }
 }
 
 function row(nome,val,max,isMedia){
+  const isMobile = window.innerWidth < 600;
+  const pct = val / max;
+  const width = isMobile ? (35 + pct * 65) : (pct * 100);
+
   return `
   <div class="row">
     <div class="label">${nome}</div>
     <div class="bar">
-      <div class="fill" style="width:${(val/max)*100}%"></div>
+      <div class="fill" style="width:${width}%"></div>
     </div>
     <div class="value">${isMedia?val:val+'%'}</div>
   </div>`;
