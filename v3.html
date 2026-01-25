@@ -90,7 +90,7 @@ select{
   gap:10px;
   margin:8px 0;
 }
-.label{width:150px;font-size:.85rem}
+.label{width:180px;font-size:.85rem}
 .bar{
   flex:1;
   height:10px;
@@ -103,7 +103,7 @@ select{
   background:var(--accent);
 }
 .value{
-  width:60px;
+  width:70px;
   text-align:right;
   font-weight:600;
 }
@@ -118,12 +118,18 @@ select{
 
 <div class="controls">
   <select id="mercado">
-    <option value="over25">Over 2.5 gols</option>
-    <option value="under25">Under 2.5 gols</option>
-    <option value="over15">Over 1.5 gols</option>
-    <option value="under15">Under 1.5 gols</option>
+    <option value="mediaGols">Média de gols</option>
     <option value="vitoriasMandante">Vitórias do mandante</option>
     <option value="vitoriasVisitante">Vitórias do visitante</option>
+    <option value="empates">Empates</option>
+    <option value="zeroZero">Jogos 0x0</option>
+
+    <option value="over05">Over 0.5 gols</option>
+    <option value="under05">Under 0.5 gols</option>
+    <option value="over15">Over 1.5 gols</option>
+    <option value="under15">Under 1.5 gols</option>
+    <option value="over25">Over 2.5 gols</option>
+    <option value="under25">Under 2.5 gols</option>
   </select>
 </div>
 
@@ -145,13 +151,23 @@ select{
 </div>
 
 <script>
-const ligas={
+const ligas = {
   bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv'},
+  bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv'},
   premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv'},
+  premier2:{nome:'🇬🇧 INGLATERRA-2',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv'},
   laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv'},
+  laliga2:{nome:'🇪🇸 ESPANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv'},
   seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv'},
+  seriea2:{nome:'🇮🇹 ITÁLIA-2',url:'https://www.football-data.co.uk/mmz4281/2526/I2.csv'},
   ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv'},
-  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'}
+  ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv'},
+  eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv'},
+  portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv'},
+  scotland:{nome:'🏴 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv'},
+  belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv'},
+  turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv'},
+  greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv'}
 };
 
 let dados=[];
@@ -169,20 +185,26 @@ async function carregar(){
 
 function calcular(rows,nome){
   const jogos=rows.filter(r=>r.FTR);
-  let ft={vm:0,vv:0,o15:0,o25:0},
-      ht={vm:0,vv:0,o15:0,o25:0};
+  let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0},
+      ht={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
 
   jogos.forEach(j=>{
-    if(j.FTR==='H')ft.vm++;
-    if(j.FTR==='A')ft.vv++;
-    if(j.HTR==='H')ht.vm++;
-    if(j.HTR==='A')ht.vv++;
+    if(j.FTR==='H')ft.vm++; else if(j.FTR==='A')ft.vv++; else ft.e++;
+    if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
 
     const ftg=(+j.FTHG)+(+j.FTAG);
     const htg=(+j.HTHG||0)+(+j.HTAG||0);
 
+    ft.g+=ftg; ht.g+=htg;
+
+    if(ftg===0)ft.z++;
+    if(htg===0)ht.z++;
+
+    if(ftg>=1)ft.o05++;
     if(ftg>=2)ft.o15++;
     if(ftg>=3)ft.o25++;
+
+    if(htg>=1)ht.o05++;
     if(htg>=2)ht.o15++;
     if(htg>=3)ht.o25++;
   });
@@ -191,28 +213,39 @@ function calcular(rows,nome){
   return{
     nome,
     FT:{
+      mediaGols:(ft.g/t).toFixed(2),
+      vitoriasMandante:(ft.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ft.vv/t*100).toFixed(1),
+      empates:(ft.e/t*100).toFixed(1),
+      zeroZero:(ft.z/t*100).toFixed(1),
+      over05:(ft.o05/t*100).toFixed(1),
+      under05:((t-ft.o05)/t*100).toFixed(1),
       over15:(ft.o15/t*100).toFixed(1),
       under15:((t-ft.o15)/t*100).toFixed(1),
       over25:(ft.o25/t*100).toFixed(1),
-      under25:((t-ft.o25)/t*100).toFixed(1),
-      vitoriasMandante:(ft.vm/t*100).toFixed(1),
-      vitoriasVisitante:(ft.vv/t*100).toFixed(1)
+      under25:((t-ft.o25)/t*100).toFixed(1)
     },
     HT:{
+      mediaGols:(ht.g/t).toFixed(2),
+      vitoriasMandante:(ht.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ht.vv/t*100).toFixed(1),
+      empates:(ht.e/t*100).toFixed(1),
+      zeroZero:(ht.z/t*100).toFixed(1),
+      over05:(ht.o05/t*100).toFixed(1),
+      under05:((t-ht.o05)/t*100).toFixed(1),
       over15:(ht.o15/t*100).toFixed(1),
       under15:((t-ht.o15)/t*100).toFixed(1),
       over25:(ht.o25/t*100).toFixed(1),
-      under25:((t-ht.o25)/t*100).toFixed(1),
-      vitoriasMandante:(ht.vm/t*100).toFixed(1),
-      vitoriasVisitante:(ht.vv/t*100).toFixed(1)
+      under25:((t-ht.o25)/t*100).toFixed(1)
     }
   };
 }
 
 function mercadoOposto(m){
   const mapa={
-    over25:'under25',under25:'over25',
-    over15:'under15',under15:'over15'
+    over05:'under05', under05:'over05',
+    over15:'under15', under15:'over15',
+    over25:'under25', under25:'over25'
   };
   return mapa[m]||m;
 }
@@ -233,23 +266,29 @@ function renderRanking(container,met){
   const max=Math.max(...dados.map(d=>+d[periodoAtivo][met]));
   [...dados].sort((a,b)=>b[periodoAtivo][met]-a[periodoAtivo][met]).forEach(d=>{
     const v=d[periodoAtivo][met];
+    const exibido=met==='mediaGols'?v:`${v}%`;
     container.innerHTML+=`
       <div class="row">
         <div class="label">${d.nome}</div>
         <div class="bar"><div class="fill" style="width:${(v/max)*100}%"></div></div>
-        <div class="value">${v}%</div>
+        <div class="value">${exibido}</div>
       </div>`;
   });
 }
 
 function label(m,p){
   const l={
-    over25:'Over 2.5 gols',
-    under25:'Under 2.5 gols',
+    mediaGols:'Média de gols',
+    vitoriasMandante:'Vitórias do mandante',
+    vitoriasVisitante:'Vitórias do visitante',
+    empates:'Empates',
+    zeroZero:'Jogos 0x0',
+    over05:'Over 0.5 gols',
+    under05:'Under 0.5 gols',
     over15:'Over 1.5 gols',
     under15:'Under 1.5 gols',
-    vitoriasMandante:'Vitórias do mandante',
-    vitoriasVisitante:'Vitórias do visitante'
+    over25:'Over 2.5 gols',
+    under25:'Under 2.5 gols'
   };
   return `${l[m]} — ${p}`;
 }
