@@ -87,6 +87,11 @@ button,select{
 .bar{flex:1;height:10px;background:rgba(0,0,0,.25);border-radius:5px}
 .fill{height:100%;background:var(--accent);border-radius:5px}
 .value{width:70px;text-align:right;font-weight:600}
+.notice{
+  opacity:.7;
+  font-size:.9rem;
+  padding:10px 0;
+}
 </style>
 </head>
 
@@ -130,23 +135,38 @@ button,select{
 </div>
 
 <script>
+/* =======================
+   CONFIGURAÇÃO DE MERCADOS
+======================= */
+const mercadosValidos = {
+  HTFT: [
+    'mediaGols','zeroZero',
+    'over05','under05',
+    'over15','under15',
+    'over25','under25',
+    'vitoriasMandante',
+    'vitoriasVisitante',
+    'empates'
+  ],
+  MV: [
+    'vitoriasMandante',
+    'vitoriasVisitante',
+    'empates'
+  ]
+};
+
+/* =======================
+   LIGAS
+======================= */
 const ligas = {
   bundesliga:{nome:'🇩🇪 ALEMANHA',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv',ht:true},
-  bundesliga2:{nome:'🇩🇪 ALEMANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv',ht:true},
   premier:{nome:'🇬🇧 INGLATERRA',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv',ht:true},
-  premier2:{nome:'🇬🇧 INGLATERRA-2',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv',ht:true},
   laliga:{nome:'🇪🇸 ESPANHA',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv',ht:true},
-  laliga2:{nome:'🇪🇸 ESPANHA-2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv',ht:true},
   seriea:{nome:'🇮🇹 ITÁLIA',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv',ht:true},
-  seriea2:{nome:'🇮🇹 ITÁLIA-2',url:'https://www.football-data.co.uk/mmz4281/2526/I2.csv',ht:true},
   ligue1:{nome:'🇫🇷 FRANÇA',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv',ht:true},
-  ligue2:{nome:'🇫🇷 FRANÇA-2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv',ht:true},
   eredivisie:{nome:'🇳🇱 HOLANDA',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv',ht:true},
   portugal:{nome:'🇵🇹 PORTUGAL',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv',ht:true},
-  scotland:{nome:'🏴 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
-  belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
-  turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
-  greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
+  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 ESCÓCIA',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
 
   denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',ht:false,season:'2025/2026'},
   switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',ht:false,season:'2025/2026'},
@@ -157,6 +177,9 @@ const ligas = {
 let dados=[];
 let modoAnalise='HTFT';
 
+/* =======================
+   CARREGAMENTO
+======================= */
 async function carregarTudo(){
   dados=[];
   for(const k in ligas){
@@ -170,6 +193,9 @@ async function carregarTudo(){
   renderizar();
 }
 
+/* =======================
+   CÁLCULO
+======================= */
 function calcular(rows,nome,temHT){
   const jogos=rows.filter(r=>r.FTR);
   let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
@@ -233,8 +259,20 @@ function calcular(rows,nome,temHT){
   };
 }
 
+/* =======================
+   RENDER
+======================= */
 function renderizar(){
   const m=mercado.value;
+
+  if(!mercadosValidos[modoAnalise].includes(m)){
+    tituloA.innerText = modoAnalise==='MV'?'Mandante':'HT';
+    tituloB.innerText = modoAnalise==='MV'?'Visitante':'FT';
+    rankingA.innerHTML='<div class="notice">Este mercado não se aplica a este modo.</div>';
+    rankingB.innerHTML='<div class="notice">Selecione um mercado compatível.</div>';
+    return;
+  }
+
   if(modoAnalise==='HTFT'){
     const lista=dados.filter(d=>d.temHT);
     tituloA.innerText=label(m,'HT');
@@ -281,6 +319,9 @@ function label(m,eixo){
   return `${l[m]} — ${eixo}`;
 }
 
+/* =======================
+   UI
+======================= */
 btnHTFT.onclick=()=>{modoAnalise='HTFT';btnHTFT.classList.add('active');btnMV.classList.remove('active');renderizar();}
 btnMV.onclick=()=>{modoAnalise='MV';btnMV.classList.add('active');btnHTFT.classList.remove('active');renderizar();}
 mercado.onchange=renderizar;
