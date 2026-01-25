@@ -160,42 +160,50 @@ let modoAnalise='HTFT';
 async function carregarTudo(){
   dados=[];
   for(const k in ligas){
-    const csv = await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
-    let rows = Papa.parse(csv,{header:true}).data;
-
+    const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
+    let rows=Papa.parse(csv,{header:true}).data;
     if(ligas[k].season){
-      rows = rows.filter(r => r.SEASON === ligas[k].season);
+      rows=rows.filter(r=>r.SEASON===ligas[k].season);
     }
-
-    dados.push(calcular(rows, ligas[k].nome, ligas[k].ht));
+    dados.push(calcular(rows,ligas[k].nome,ligas[k].ht));
   }
   renderizar();
 }
 
-function calcular(rows, nome, temHT){
-  const jogos = rows.filter(r => r.FTR);
-  let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0},
-      ht={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
+function calcular(rows,nome,temHT){
+  const jogos=rows.filter(r=>r.FTR);
+  let ft={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
+  let ht={g:0,vm:0,vv:0,e:0,z:0,o05:0,o15:0,o25:0};
 
   jogos.forEach(j=>{
-    const HG = j.FTHG ?? j.HG ?? 0;
-    const AG = j.FTAG ?? j.AG ?? 0;
+    const HG=j.FTHG??j.HG??0;
+    const AG=j.FTAG??j.AG??0;
+    const ftg=(+HG)+(+AG);
 
     if(j.FTR==='H')ft.vm++; else if(j.FTR==='A')ft.vv++; else ft.e++;
-
-    const ftg = (+HG) + (+AG);
-    ft.g += ftg;
+    ft.g+=ftg;
     if(ftg===0)ft.z++;
     if(ftg>=1)ft.o05++;
     if(ftg>=2)ft.o15++;
     if(ftg>=3)ft.o25++;
+
+    if(temHT){
+      const hHG=j.HTHG??0;
+      const hAG=j.HTAG??0;
+      const htg=(+hHG)+(+hAG);
+      if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
+      ht.g+=htg;
+      if(htg===0)ht.z++;
+      if(htg>=1)ht.o05++;
+      if(htg>=2)ht.o15++;
+      if(htg>=3)ht.o25++;
+    }
   });
 
-  const t = jogos.length || 1;
+  const t=jogos.length||1;
 
   return{
-    nome,
-    temHT,
+    nome,temHT,
     FT:{
       mediaGols:(ft.g/t).toFixed(2),
       vitoriasMandante:(ft.vm/t*100).toFixed(1),
@@ -209,18 +217,29 @@ function calcular(rows, nome, temHT){
       over25:(ft.o25/t*100).toFixed(1),
       under25:((t-ft.o25)/t*100).toFixed(1)
     },
-    HT: null
+    HT: temHT ? {
+      mediaGols:(ht.g/t).toFixed(2),
+      vitoriasMandante:(ht.vm/t*100).toFixed(1),
+      vitoriasVisitante:(ht.vv/t*100).toFixed(1),
+      empates:(ht.e/t*100).toFixed(1),
+      zeroZero:(ht.z/t*100).toFixed(1),
+      over05:(ht.o05/t*100).toFixed(1),
+      under05:((t-ht.o05)/t*100).toFixed(1),
+      over15:(ht.o15/t*100).toFixed(1),
+      under15:((t-ht.o15)/t*100).toFixed(1),
+      over25:(ht.o25/t*100).toFixed(1),
+      under25:((t-ht.o25)/t*100).toFixed(1)
+    }:null
   };
 }
 
 function renderizar(){
   const m=mercado.value;
-
   if(modoAnalise==='HTFT'){
     const lista=dados.filter(d=>d.temHT);
     tituloA.innerText=label(m,'HT');
     tituloB.innerText=label(m,'FT');
-    renderRanking(rankingA,lista,'FT',m);
+    renderRanking(rankingA,lista,'HT',m);
     renderRanking(rankingB,lista,'FT',m);
   }else{
     tituloA.innerText=label(m,'Mandante');
