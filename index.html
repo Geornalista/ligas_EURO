@@ -4,33 +4,119 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Comparativo Europeu</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 <style>
-:root{--bg:#0d1b2a;--card:#1b263b;--accent:#00aaff;--text:#e0e1dd}
-[data-theme="light"]{--bg:#f4f6f8;--card:#fff;--accent:#005fcc;--text:#1b263b}
+:root{
+  --bg:#0d1b2a;
+  --card:#1b263b;
+  --accent:#00aaff;
+  --text:#e0e1dd
+}
+[data-theme="light"]{
+  --bg:#f4f6f8;
+  --card:#fff;
+  --accent:#005fcc;
+  --text:#1b263b
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
-header{padding:14px;display:flex;justify-content:space-between;align-items:center}
-h1{margin:0;font-size:1.1rem;color:var(--accent)}
-button,select{padding:8px 10px;border:none;border-radius:10px;background:var(--card);color:var(--text);cursor:pointer}
-.tabs{display:flex;gap:6px;padding:0 12px 12px}
-.tabs button{flex:1;opacity:.6}
-.tabs button.active{background:var(--accent);color:#000;font-weight:600;opacity:1}
-.controls{padding:0 12px 12px}
-.section{padding:12px;display:grid;gap:12px}
-@media(min-width:900px){.section{grid-template-columns:1fr 1fr}}
-.card{background:var(--card);border-radius:14px;padding:14px}
-.card h2{margin:0 0 10px;font-size:.9rem;color:var(--accent)}
-.row{display:flex;gap:8px;align-items:center;margin:6px 0}
-.label{width:220px;font-size:.85rem}
-.bar{flex:1;height:8px;background:rgba(0,0,0,.25);border-radius:4px}
-.fill{height:100%;background:var(--accent);border-radius:4px}
-.value{width:60px;text-align:right;font-weight:600}
-.note{opacity:.7;font-size:.85rem}
+body{
+  margin:0;
+  font-family:system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text)
+}
+header{
+  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+h1{
+  margin:0;
+  font-size:1.1rem;
+  color:var(--accent)
+}
+button,select{
+  padding:8px 10px;
+  border:none;
+  border-radius:10px;
+  background:var(--card);
+  color:var(--text);
+  cursor:pointer
+}
+.tabs{
+  display:flex;
+  gap:6px;
+  padding:0 12px 12px
+}
+.tabs button{
+  flex:1;
+  opacity:.6
+}
+.tabs button.active{
+  background:var(--accent);
+  color:#000;
+  font-weight:600;
+  opacity:1
+}
+.controls{
+  padding:0 12px 12px
+}
+.section{
+  padding:12px;
+  display:grid;
+  gap:12px
+}
+@media(min-width:900px){
+  .section{grid-template-columns:1fr 1fr}
+}
+.card{
+  background:var(--card);
+  border-radius:14px;
+  padding:14px
+}
+.card h2{
+  margin:0 0 10px;
+  font-size:.9rem;
+  color:var(--accent)
+}
+.row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin:6px 0
+}
+.label{
+  width:220px;
+  font-size:.85rem
+}
+.bar{
+  flex:1;
+  height:8px;
+  background:rgba(0,0,0,.25);
+  border-radius:4px
+}
+.fill{
+  height:100%;
+  background:var(--accent);
+  border-radius:4px
+}
+.value{
+  width:60px;
+  text-align:right;
+  font-weight:600
+}
+.note{
+  opacity:.7;
+  font-size:.85rem
+}
 </style>
 </head>
 
 <body data-theme="dark">
+
 <header>
   <h1>Comparativo Europeu</h1>
   <button onclick="alternarTema()">🌓</button>
@@ -95,6 +181,7 @@ const ligas={
   belgium:{nome:'🇧🇪 BÉLGICA',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
   turkey:{nome:'🇹🇷 TURQUIA',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
   greece:{nome:'🇬🇷 GRÉCIA',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
+
   denmark:{nome:'🇩🇰 DINAMARCA',url:'https://www.football-data.co.uk/new/DNK.csv',season:'2025/2026',ht:false},
   switzerland:{nome:'🇨🇭 SUÍÇA',url:'https://www.football-data.co.uk/new/SWZ.csv',season:'2025/2026',ht:false},
   norway:{nome:'🇳🇴 NORUEGA',url:'https://www.football-data.co.uk/new/NOR.csv',season:'2025',ht:false},
@@ -107,16 +194,24 @@ function setMercados(){
   mercado.innerHTML='';
   mercados[aba].forEach(m=>{
     const o=document.createElement('option');
-    o.value=m;o.textContent=labels[m];
+    o.value=m;
+    o.textContent=labels[m];
     mercado.appendChild(o);
   });
 }
 
 async function carregar(){
   for(const k in ligas){
-    const csv=await fetch('https://corsproxy.io/?'+encodeURIComponent(ligas[k].url)).then(r=>r.text());
-    let rows=Papa.parse(csv,{header:true}).data;
-    if(ligas[k].season) rows=rows.filter(r=>r.SEASON===ligas[k].season);
+    const csv = await fetch(
+      'https://corsproxy.io/?' + encodeURIComponent(ligas[k].url)
+    ).then(r=>r.text());
+
+    let rows = Papa.parse(csv,{header:true}).data;
+
+    if(ligas[k].season && rows.length && rows[0].SEASON){
+      rows = rows.filter(r => r.SEASON === ligas[k].season);
+    }
+
     dados.push(calc(rows,ligas[k]));
   }
   setMercados();
@@ -124,81 +219,155 @@ async function carregar(){
 }
 
 function calc(rows,liga){
-  const jogos=rows.filter(r=>r.FTR);
+  const jogos = rows.filter(r=>r.FTR);
+
   let ft={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
   let ht={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
+
   jogos.forEach(j=>{
-    const hg=j.FTHG??j.HG??0,ag=j.FTAG??j.AG??0;
+    const hg=j.FTHG??j.HG??0;
+    const ag=j.FTAG??j.AG??0;
     const tg=(+hg)+(+ag);
-    ft.g+=tg;if(tg===0)ft.z++;if(tg>=1)ft.o05++;if(tg>=2)ft.o15++;if(tg>=3)ft.o25++;
-    if(j.FTR==='H')ft.vm++;else if(j.FTR==='A')ft.vv++;else ft.e++;
+
+    ft.g+=tg;
+    if(tg===0)ft.z++;
+    if(tg>=1)ft.o05++;
+    if(tg>=2)ft.o15++;
+    if(tg>=3)ft.o25++;
+
+    if(j.FTR==='H')ft.vm++;
+    else if(j.FTR==='A')ft.vv++;
+    else ft.e++;
+
     if(liga.ht){
       const htg=(+(j.HTHG||0))+(+(j.HTAG||0));
-      ht.g+=htg;if(htg===0)ht.z++;if(htg>=1)ht.o05++;if(htg>=2)ht.o15++;if(htg>=3)ht.o25++;
-      if(j.HTR==='H')ht.vm++;else if(j.HTR==='A')ht.vv++;else ht.e++;
+      ht.g+=htg;
+      if(htg===0)ht.z++;
+      if(htg>=1)ht.o05++;
+      if(htg>=2)ht.o15++;
+      if(htg>=3)ht.o25++;
+
+      if(j.HTR==='H')ht.vm++;
+      else if(j.HTR==='A')ht.vv++;
+      else ht.e++;
     }
   });
+
   const t=jogos.length||1;
   const pct=x=>(x/t*100).toFixed(1);
+
   return{
-    nome:liga.nome,ht:liga.ht,
-    FT:{mediaGols:(ft.g/t).toFixed(2),zeroZero:pct(ft.z),over05:pct(ft.o05),under05:pct(t-ft.o05),
-        over15:pct(ft.o15),under15:pct(t-ft.o15),over25:pct(ft.o25),under25:pct(t-ft.o25),
-        vitoriasMandante:pct(ft.vm),vitoriasVisitante:pct(ft.vv),empates:pct(ft.e)},
-    HT:liga.ht?{mediaGols:(ht.g/t).toFixed(2),zeroZero:pct(ht.z),over05:pct(ht.o05),under05:pct(t-ht.o05),
-        over15:pct(ht.o15),under15:pct(t-ht.o15),over25:pct(ht.o25),under25:pct(t-ht.o25),
-        vitoriasMandante:pct(ht.vm),vitoriasVisitante:pct(ht.vv),empates:pct(ht.e)}:null
+    nome:liga.nome,
+    ht:liga.ht,
+    FT:{
+      mediaGols:(ft.g/t).toFixed(2),
+      zeroZero:pct(ft.z),
+      over05:pct(ft.o05),
+      under05:pct(t-ft.o05),
+      over15:pct(ft.o15),
+      under15:pct(t-ft.o15),
+      over25:pct(ft.o25),
+      under25:pct(t-ft.o25),
+      vitoriasMandante:pct(ft.vm),
+      vitoriasVisitante:pct(ft.vv),
+      empates:pct(ft.e)
+    },
+    HT:liga.ht?{
+      mediaGols:(ht.g/t).toFixed(2),
+      zeroZero:pct(ht.z),
+      over05:pct(ht.o05),
+      under05:pct(t-ht.o05),
+      over15:pct(ht.o15),
+      under15:pct(t-ht.o15),
+      over25:pct(ht.o25),
+      under25:pct(t-ht.o25),
+      vitoriasMandante:pct(ht.vm),
+      vitoriasVisitante:pct(ht.vv),
+      empates:pct(ht.e)
+    }:null
   };
 }
 
 function render(){
-  rankingA.innerHTML='';rankingB.innerHTML='';
+  rankingA.innerHTML='';
+  rankingB.innerHTML='';
   const m=mercado.value;
+
   if(aba==='FT'){
     tituloA.textContent=labels[m]+' — FT';
-    tituloB.textContent=m.startsWith('over')?'Complemento':'Contexto';
+    tituloB.textContent='Contexto';
+
     const l=[...dados].sort((a,b)=>b.FT[m]-a.FT[m]);
     const max=Math.max(...l.map(d=>+d.FT[m]));
-    l.forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT[m],max,m==='mediaGols'));
+
+    l.forEach(d=>{
+      rankingA.innerHTML+=row(d.nome,d.FT[m],max,m==='mediaGols');
+    });
+
     rankingB.innerHTML='<div class="note">Leitura complementar do tempo regulamentar.</div>';
   }
+
   if(aba==='HTFT'){
     const l=dados.filter(d=>d.ht);
     tituloA.textContent=labels[m]+' — HT';
     tituloB.textContent=labels[m]+' — FT';
+
     const maxHT=Math.max(...l.map(d=>+d.HT[m]));
     const maxFT=Math.max(...l.map(d=>+d.FT[m]));
-    [...l].sort((a,b)=>b.HT[m]-a.HT[m]).forEach(d=>rankingA.innerHTML+=row(d.nome,d.HT[m],maxHT,m==='mediaGols'));
-    [...l].sort((a,b)=>b.FT[m]-a.FT[m]).forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT[m],maxFT,m==='mediaGols'));
+
+    [...l].sort((a,b)=>b.HT[m]-a.HT[m])
+      .forEach(d=>rankingA.innerHTML+=row(d.nome,d.HT[m],maxHT,m==='mediaGols'));
+
+    [...l].sort((a,b)=>b.FT[m]-a.FT[m])
+      .forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT[m],maxFT,m==='mediaGols'));
   }
+
   if(aba==='MV'){
     tituloA.textContent='Vitórias do mandante — FT';
     tituloB.textContent='Vitórias do visitante — FT';
+
     const maxA=Math.max(...dados.map(d=>+d.FT.vitoriasMandante));
     const maxB=Math.max(...dados.map(d=>+d.FT.vitoriasVisitante));
+
     [...dados].sort((a,b)=>b.FT.vitoriasMandante-a.FT.vitoriasMandante)
       .forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT.vitoriasMandante,maxA,false));
+
     [...dados].sort((a,b)=>b.FT.vitoriasVisitante-a.FT.vitoriasVisitante)
       .forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT.vitoriasVisitante,maxB,false));
   }
 }
 
 function row(nome,val,max,isMedia){
-  return `<div class="row"><div class="label">${nome}</div><div class="bar"><div class="fill" style="width:${(val/max)*100}%"></div></div><div class="value">${isMedia?val:val+'%'}</div></div>`;
+  return `
+  <div class="row">
+    <div class="label">${nome}</div>
+    <div class="bar">
+      <div class="fill" style="width:${(val/max)*100}%"></div>
+    </div>
+    <div class="value">${isMedia?val:val+'%'}</div>
+  </div>`;
 }
 
 tabFT.onclick=()=>{aba='FT';activate(tabFT)};
 tabHTFT.onclick=()=>{aba='HTFT';activate(tabHTFT)};
 tabMV.onclick=()=>{aba='MV';activate(tabMV)};
+
 function activate(btn){
   document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   setMercados();
   render();
 }
+
 mercado.onchange=render;
-function alternarTema(){document.body.dataset.theme=document.body.dataset.theme==='dark'?'light':'dark'}
+
+function alternarTema(){
+  document.body.dataset.theme =
+    document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+}
+
 carregar();
 </script>
+
 </body>
 </html>
