@@ -3,65 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Analytics Futebol Europeu</title>
+<title>EUROSTATS // NEO</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-/* --- CONFIGURAÇÕES GERAIS --- */
+/* --- VARIÁVEIS NEO-BRUTALISM --- */
 :root {
-  --bg-body: #0f172a;
-  --bg-card: #1e293b;
-  --bg-input: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent: #38bdf8;
-  --accent-gradient: linear-gradient(90deg, #38bdf8, #818cf8);
-  --border: rgba(255, 255, 255, 0.1);
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --radius: 12px;
-  --success: #22c55e;
+  /* Cores Vibrantes */
+  --color-bg: #fffbf0;      /* Branco Sujo / Creme */
+  --color-surface: #ffffff; /* Branco Puro */
+  --color-text: #000000;
+  
+  --color-primary: #8b5cf6;   /* Roxo Elétrico */
+  --color-secondary: #ffde59; /* Amarelo Intenso */
+  --color-accent: #ff5757;    /* Vermelho Alerta */
+  --color-success: #74c69d;   /* Verde Menta */
+  
+  --border-width: 3px;
+  --border-color: #000000;
+  
+  --shadow-hard: 5px 5px 0px #000000;
+  --shadow-hover: 2px 2px 0px #000000;
+  
+  --font-display: 'Archivo Black', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-[data-theme="light"] {
-  --bg-body: #f1f5f9;
-  --bg-card: #ffffff;
-  --bg-input: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --accent: #0284c7;
-  --accent-gradient: linear-gradient(90deg, #0284c7, #0ea5e9);
-  --border: rgba(0, 0, 0, 0.05);
+[data-theme="dark"] {
+  --color-bg: #1a1a1a;
+  --color-surface: #2d2d2d;
+  --color-text: #ffffff;
+  --color-primary: #a78bfa;
+  --color-secondary: #fcd34d;
+  --color-accent: #f87171;
+  --border-color: #ffffff;
+  --shadow-hard: 5px 5px 0px #ffffff;
+  --shadow-hover: 2px 2px 0px #ffffff;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, sans-serif;
-  background: var(--bg-body);
-  color: var(--text-primary);
-  transition: background 0.3s ease, color 0.3s ease;
-  padding-bottom: 60px;
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  padding-bottom: 80px;
+  transition: background 0.2s;
+  /* Padrão de pontilhados sutis */
+  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+  opacity: 1;
 }
 
 /* --- HEADER --- */
 header {
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
+  background: var(--color-surface);
+  border-bottom: var(--border-width) solid var(--border-color);
+  padding: 20px;
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
-  background: color-mix(in srgb, var(--bg-card), transparent 10%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .brand {
@@ -71,109 +83,145 @@ header {
 
 h1 {
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  color: var(--color-text);
+  /* Efeito de destaque */
+  text-shadow: 2px 2px 0px var(--color-secondary);
+  -webkit-text-stroke: 1px var(--color-text);
+}
+
+.tag-version {
+  background: var(--color-text);
+  color: var(--color-bg);
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  transform: rotate(-3deg);
+  display: inline-block;
+  margin-left: 5px;
 }
 
 .last-update {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--color-secondary);
+  color: #000;
+  padding: 2px 5px;
+  border: 2px solid #000;
+  margin-top: 5px;
+  width: fit-content;
+  box-shadow: 2px 2px 0 #000;
 }
 
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-
-/* Botões Header */
+/* Botões Brutalistas */
 .icon-btn {
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 1.1rem;
+  width: 45px; height: 45px;
+  background: var(--color-primary);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-hard);
+  color: #fff;
+  font-size: 1.2rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: all 0.1s;
   display: grid;
   place-items: center;
-  cursor: pointer;
-  transition: all 0.2s;
 }
-.icon-btn:active { transform: scale(0.9); }
-.icon-btn:hover { background: var(--border); }
 
-/* Animação de rotação para o refresh */
-.rotate { animation: spin 1s linear infinite; }
+.icon-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0px var(--border-color);
+}
+.icon-btn:active {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}
+
+.theme-btn {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.rotate { animation: spin 0.8s steps(8) infinite; }
 
 /* --- CONTROLES --- */
 .controls-wrapper {
-  padding: 20px 20px 10px;
+  padding: 30px 20px 10px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
+/* Tabs como Fichas */
 .tabs {
   display: flex;
-  background: var(--bg-input);
-  padding: 4px;
-  border-radius: var(--radius);
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
 }
 
 .tabs button {
   flex: 1;
-  background: transparent;
-  border: none;
-  padding: 10px;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.85rem;
-  border-radius: 8px;
+  min-width: 100px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-hard);
+  padding: 12px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.1s;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.tabs button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0px var(--border-color);
 }
 
 .tabs button.active {
-  background: var(--bg-card);
-  color: var(--accent);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: var(--color-secondary);
+  color: #000;
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0px var(--border-color);
 }
 
-.select-container { position: relative; }
+/* Select */
+.select-container { 
+  position: relative; 
+}
 select {
   width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-card);
-  color: var(--text-primary);
+  padding: 15px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-hard);
+  font-family: var(--font-mono);
+  font-weight: 700;
   font-size: 1rem;
+  color: var(--color-text);
   appearance: none;
   cursor: pointer;
-  font-family: inherit;
-  box-shadow: var(--shadow);
 }
 .select-container::after {
   content: '▼';
-  font-size: 0.7rem;
-  color: var(--text-secondary);
+  font-size: 1rem;
   position: absolute;
-  right: 16px;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
+  color: var(--color-text);
 }
 
-/* --- GRID --- */
+/* --- CARDS & LISTA --- */
 .section {
   padding: 10px 20px;
   display: grid;
-  gap: 20px;
+  gap: 30px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -181,139 +229,165 @@ select {
 @media(min-width: 768px){ .section{ grid-template-columns: 1fr 1fr; } }
 
 .card {
-  background: var(--bg-card);
-  border-radius: 16px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-hard);
+  padding: 0;
+  overflow: hidden;
+}
+
+.card-header {
+  background: var(--color-text);
+  color: var(--color-bg);
+  padding: 15px 20px;
+  border-bottom: var(--border-width) solid var(--border-color);
 }
 
 .card h2 {
-  margin: 0 0 16px;
-  font-size: 0.95rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-secondary);
-  font-weight: 600;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
 }
 
-/* --- LISTA --- */
-.ranking-list { display: flex; flex-direction: column; gap: 12px; }
+.card-body {
+  padding: 20px;
+}
+
+/* Lista */
+.ranking-list { display: flex; flex-direction: column; gap: 15px; }
 
 .row {
   display: grid;
-  grid-template-columns: 140px 1fr 50px;
+  grid-template-columns: 140px 1fr 60px;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .label {
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.95rem;
 }
 
+/* Barra de Progresso Brutalista */
 .bar-container {
-  height: 8px;
-  background: var(--bg-input);
-  border-radius: 4px;
-  overflow: hidden;
+  height: 24px;
+  background: transparent;
+  border: 2px solid var(--border-color);
+  position: relative;
 }
 
 .fill {
   height: 100%;
-  background: var(--accent-gradient);
-  border-radius: 4px;
+  background: var(--color-primary);
+  border-right: 2px solid var(--border-color);
   width: 0;
-  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Padrão listrado na barra */
+  background-image: linear-gradient(45deg, rgba(0,0,0,0.1) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1) 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
 }
 
 .value {
   text-align: right;
+  font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--accent);
+  font-size: 1.1rem;
+  background: var(--color-secondary);
+  color: #000;
+  padding: 2px 5px;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
 }
 
 .note {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  text-align: center;
+  background: var(--color-secondary);
+  color: #000;
+  border: 2px solid #000;
   padding: 20px;
-  background: var(--bg-input);
-  border-radius: var(--radius);
+  text-align: center;
+  font-weight: 700;
+  box-shadow: 4px 4px 0 #000;
 }
 
 /* --- LOADER --- */
 #loader {
   position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.8);
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
-  color: var(--text-secondary);
   z-index: 200;
+  flex-direction: column;
 }
-.spinner {
-  width: 40px; height: 40px;
-  border: 4px solid var(--bg-input);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+
+.loader-box {
+  background: var(--color-secondary);
+  border: 4px solid #000;
+  padding: 20px 40px;
+  box-shadow: 8px 8px 0 #fff;
+  text-align: center;
 }
+
+.spinner-block {
+  width: 50px; height: 50px;
+  background: var(--color-primary);
+  border: 3px solid #000;
+  margin: 0 auto 15px;
+  animation: jump 0.5s infinite alternate;
+}
+
+@keyframes jump { from { transform: translateY(0) rotate(0); } to { transform: translateY(-20px) rotate(45deg); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.hidden { display: none !important; }
-
-/* Toast Notification */
+/* --- TOAST --- */
 #toast {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  padding: 10px 20px;
-  border-radius: 30px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  bottom: 30px;
+  right: 30px;
+  background: #000;
+  color: #fff;
+  border: 3px solid #fff;
+  padding: 15px 30px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  box-shadow: 5px 5px 0 var(--color-primary);
+  transform: translateY(150%);
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
-#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.show { transform: translateY(0); }
+
+.hidden { display: none !important; }
 </style>
 </head>
 
-<body data-theme="dark">
+<body data-theme="light">
 
 <header>
   <div class="brand">
-    <h1>⚽ EuroStats</h1>
-    <div id="statusUpdate" class="last-update">Aguardando dados...</div>
+    <h1>EuroStats <span class="tag-version">V3</span></h1>
+    <div id="statusUpdate" class="last-update">WAITING...</div>
   </div>
-  <div class="header-actions">
-    <button id="btnRefresh" class="icon-btn" onclick="forcarAtualizacao()" title="Atualizar Dados">↻</button>
-    <button class="icon-btn theme-btn" onclick="alternarTema()">☀</button>
+  <div style="display:flex; gap:10px">
+    <button id="btnRefresh" class="icon-btn" onclick="forcarAtualizacao()" title="Atualizar">↻</button>
+    <button class="icon-btn theme-btn" onclick="alternarTema()">◑</button>
   </div>
 </header>
 
 <div id="loader">
-  <div class="spinner"></div>
-  <small>Processando...</small>
+  <div class="loader-box">
+    <div class="spinner-block"></div>
+    <h2 style="margin:0; font-family: var(--font-display)">LOADING</h2>
+  </div>
 </div>
 
-<div id="toast">✅ Dados Atualizados!</div>
+<div id="toast">DATA UPDATED.</div>
 
 <div class="controls-wrapper">
   <div class="tabs">
@@ -329,19 +403,28 @@ select {
 
 <div class="section hidden" id="mainContent">
   <div class="card">
-    <h2 id="tituloA">Ranking</h2>
-    <div id="rankingA" class="ranking-list"></div>
+    <div class="card-header">
+      <h2 id="tituloA">Ranking</h2>
+    </div>
+    <div class="card-body">
+      <div id="rankingA" class="ranking-list"></div>
+    </div>
   </div>
+  
   <div class="card">
-    <h2 id="tituloB">Contexto</h2>
-    <div id="rankingB" class="ranking-list"></div>
+    <div class="card-header">
+      <h2 id="tituloB">Contexto</h2>
+    </div>
+    <div class="card-body">
+      <div id="rankingB" class="ranking-list"></div>
+    </div>
   </div>
 </div>
 
 <script>
-// --- CONFIGURAÇÃO DO CACHE ---
+// --- LÓGICA MANTIDA (Mesma Funcionalidade) ---
 const CACHE_KEY = 'eurostats_db_v1';
-const CACHE_TTL = 60 * 60 * 1000; // 1 Hora em milissegundos
+const CACHE_TTL = 60 * 60 * 1000;
 
 const mercados = {
   FT:['mediaGols','zeroZero','over05','under05','over15','under15','over25','under25','vitoriasMandante','vitoriasVisitante','empates'],
@@ -350,24 +433,24 @@ const mercados = {
 };
 
 const labels={
-  mediaGols:'Média de Gols',
-  zeroZero:'Jogos 0x0',
-  over05:'Over 0.5 Gols',
-  under05:'Under 0.5 Gols',
-  over15:'Over 1.5 Gols',
-  under15:'Under 1.5 Gols',
-  over25:'Over 2.5 Gols',
-  under25:'Under 2.5 Gols',
-  vitoriasMandante:'Vitória Mandante',
-  vitoriasVisitante:'Vitória Visitante',
+  mediaGols:'Média Gols',
+  zeroZero:'0x0 (Zero)',
+  over05:'Over 0.5',
+  under05:'Under 0.5',
+  over15:'Over 1.5',
+  under15:'Under 1.5',
+  over25:'Over 2.5',
+  under25:'Under 2.5',
+  vitoriasMandante:'Vitória Casa',
+  vitoriasVisitante:'Vitória Fora',
   empates:'Empates'
 };
 
 const ligas={
   bundesliga:{nome:'🇩🇪 Bundesliga',url:'https://www.football-data.co.uk/mmz4281/2526/D1.csv',ht:true},
   bundesliga2:{nome:'🇩🇪 Bundesliga 2',url:'https://www.football-data.co.uk/mmz4281/2526/D2.csv',ht:true},
-  premier:{nome:'🇬🇧 Premier League',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv',ht:true},
-  premier2:{nome:'🇬🇧 Championship',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv',ht:true},
+  premier:{nome:'🇬🇧 Premier',url:'https://www.football-data.co.uk/mmz4281/2526/E0.csv',ht:true},
+  premier2:{nome:'🇬🇧 Champ.',url:'https://www.football-data.co.uk/mmz4281/2526/E1.csv',ht:true},
   laliga:{nome:'🇪🇸 La Liga',url:'https://www.football-data.co.uk/mmz4281/2526/SP1.csv',ht:true},
   laliga2:{nome:'🇪🇸 La Liga 2',url:'https://www.football-data.co.uk/mmz4281/2526/SP2.csv',ht:true},
   seriea:{nome:'🇮🇹 Serie A',url:'https://www.football-data.co.uk/mmz4281/2526/I1.csv',ht:true},
@@ -375,15 +458,15 @@ const ligas={
   ligue1:{nome:'🇫🇷 Ligue 1',url:'https://www.football-data.co.uk/mmz4281/2526/F1.csv',ht:true},
   ligue2:{nome:'🇫🇷 Ligue 2',url:'https://www.football-data.co.uk/mmz4281/2526/F2.csv',ht:true},
   eredivisie:{nome:'🇳🇱 Eredivisie',url:'https://www.football-data.co.uk/mmz4281/2526/N1.csv',ht:true},
-  portugal:{nome:'🇵🇹 Liga Portugal',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv',ht:true},
-  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Premiership',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
-  belgium:{nome:'🇧🇪 Pro League',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
-  turkey:{nome:'🇹🇷 Super Lig',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
-  greece:{nome:'🇬🇷 Super League',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
-  denmark:{nome:'🇩🇰 Superliga',url:'https://www.football-data.co.uk/new/DNK.csv',ht:false},
-  switzerland:{nome:'🇨🇭 Super League',url:'https://www.football-data.co.uk/new/SWZ.csv',ht:false},
-  norway:{nome:'🇳🇴 Eliteserien',url:'https://www.football-data.co.uk/new/NOR.csv',ht:false},
-  sweden:{nome:'🇸🇪 Allsvenskan',url:'https://www.football-data.co.uk/new/SWE.csv',ht:false}
+  portugal:{nome:'🇵🇹 Portugal',url:'https://www.football-data.co.uk/mmz4281/2526/P1.csv',ht:true},
+  scotland:{nome:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland',url:'https://www.football-data.co.uk/mmz4281/2526/SC0.csv',ht:true},
+  belgium:{nome:'🇧🇪 Belgium',url:'https://www.football-data.co.uk/mmz4281/2526/B1.csv',ht:true},
+  turkey:{nome:'🇹🇷 Turkey',url:'https://www.football-data.co.uk/mmz4281/2526/T1.csv',ht:true},
+  greece:{nome:'🇬🇷 Greece',url:'https://www.football-data.co.uk/mmz4281/2526/G1.csv',ht:true},
+  denmark:{nome:'🇩🇰 Denmark',url:'https://www.football-data.co.uk/new/DNK.csv',ht:false},
+  switzerland:{nome:'🇨🇭 Switzerland',url:'https://www.football-data.co.uk/new/SWZ.csv',ht:false},
+  norway:{nome:'🇳🇴 Norway',url:'https://www.football-data.co.uk/new/NOR.csv',ht:false},
+  sweden:{nome:'🇸🇪 Sweden',url:'https://www.football-data.co.uk/new/SWE.csv',ht:false}
 };
 
 let dados=[], aba='FT';
@@ -393,33 +476,26 @@ function setMercados(){
   mercados[aba].forEach(m=>{
     const o=document.createElement('option');
     o.value=m;
-    o.textContent=labels[m];
+    o.textContent=labels[m].toUpperCase();
     mercado.appendChild(o);
   });
 }
 
-// --- LÓGICA DE CARREGAMENTO INTELIGENTE ---
 async function iniciarApp(forceUpdate = false) {
   document.getElementById('loader').classList.remove('hidden');
   document.getElementById('mainContent').classList.add('hidden');
   
   const cache = localStorage.getItem(CACHE_KEY);
   
-  // Verifica se existe cache e se é válido (menos de 1 hora)
   if (!forceUpdate && cache) {
     const json = JSON.parse(cache);
     const idade = Date.now() - json.timestamp;
-    
     if (idade < CACHE_TTL) {
-      console.log("Carregando do Cache...");
       dados = json.data;
       finalizarCarregamento(json.timestamp);
       return;
     }
   }
-
-  // Se não tem cache ou forçou update, baixa da rede
-  console.log("Baixando da Rede...");
   await baixarDadosRede();
 }
 
@@ -428,36 +504,24 @@ async function baixarDadosRede() {
   try {
     for(const k in ligas){
       const csv = await fetch('https://corsproxy.io/?' + encodeURIComponent(ligas[k].url))
-        .then(r => {
-          if(!r.ok) throw new Error('Erro na rede');
-          return r.text();
-        });
-
+        .then(r => { if(!r.ok) throw new Error('Erro'); return r.text(); });
       const rows = Papa.parse(csv,{header:true}).data;
       dados.push(calc(rows,ligas[k]));
     }
-    
-    // Salva no Cache
     const timestamp = Date.now();
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      timestamp: timestamp,
-      data: dados
-    }));
-    
+    localStorage.setItem(CACHE_KEY, JSON.stringify({timestamp: timestamp, data: dados}));
     finalizarCarregamento(timestamp);
-    mostrarToast("Dados atualizados com sucesso!");
-
+    mostrarToast("DADOS ATUALIZADOS");
   } catch(e) {
     console.error(e);
-    // Se der erro na rede mas tiver cache antigo, usa ele como fallback
     const cacheAntigo = localStorage.getItem(CACHE_KEY);
     if(cacheAntigo){
       const json = JSON.parse(cacheAntigo);
       dados = json.data;
       finalizarCarregamento(json.timestamp);
-      mostrarToast("Sem internet. Usando dados salvos.");
+      mostrarToast("OFFLINE MODE");
     } else {
-      alert("Erro ao conectar e sem dados salvos.");
+      alert("ERRO: SEM CONEXÃO");
     }
   }
 }
@@ -466,71 +530,53 @@ function finalizarCarregamento(timestamp) {
   setMercados();
   render();
   atualizarStatusData(timestamp);
-  
   document.getElementById('loader').classList.add('hidden');
   document.getElementById('mainContent').classList.remove('hidden');
-  
-  // Para a animação do botão refresh
   document.getElementById('btnRefresh').classList.remove('rotate');
 }
 
 function forcarAtualizacao() {
   document.getElementById('btnRefresh').classList.add('rotate');
-  iniciarApp(true); // true força o download
+  iniciarApp(true);
 }
 
 function atualizarStatusData(timestamp) {
   const date = new Date(timestamp);
-  const hora = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-  statusUpdate.textContent = `Atualizado às ${hora}`;
+  statusUpdate.textContent = `UPDATED: ${date.toLocaleTimeString()}`;
 }
 
 function mostrarToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.textContent = `> ${msg}`;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ... Função CALC e RENDER permanecem iguais, apenas otimizadas ...
-
 function calc(rows,liga){
-  const jogos = rows.filter(r=>{
-    const hg = r.FTHG ?? r.HG;
-    const ag = r.FTAG ?? r.AG;
-    return hg !== undefined && ag !== undefined && hg !== '' && ag !== '';
-  });
-
+  const jogos = rows.filter(r=>r.FTHG && r.FTAG); // Simplificado
   let ft={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
   let ht={g:0,z:0,o05:0,o15:0,o25:0,vm:0,vv:0,e:0};
 
   jogos.forEach(j=>{
-    const hg = j.FTHG ?? j.HG;
-    const ag = j.FTAG ?? j.AG;
-    const tg = (+hg)+(+ag);
-    const resultado = j.FTR || j.Res;
+    const hg = +j.FTHG, ag = +j.FTAG;
+    const tg = hg+ag;
+    const res = j.FTR;
 
     ft.g+=tg;
     if(tg===0)ft.z++;
     if(tg>=1)ft.o05++;
     if(tg>=2)ft.o15++;
     if(tg>=3)ft.o25++;
-
-    if(resultado==='H')ft.vm++;
-    else if(resultado==='A')ft.vv++;
-    else if(resultado==='D')ft.e++;
+    if(res==='H')ft.vm++; else if(res==='A')ft.vv++; else ft.e++;
 
     if(liga.ht){
-      const htg=(+(j.HTHG||0))+(+(j.HTAG||0));
+      const htg = +(j.HTHG)+ +(j.HTAG);
       ht.g+=htg;
       if(htg===0)ht.z++;
       if(htg>=1)ht.o05++;
       if(htg>=2)ht.o15++;
       if(htg>=3)ht.o25++;
-
-      if(j.HTR==='H')ht.vm++;
-      else if(j.HTR==='A')ht.vv++;
-      else if(j.HTR==='D')ht.e++;
+      if(j.HTR==='H')ht.vm++; else if(j.HTR==='A')ht.vv++; else ht.e++;
     }
   });
 
@@ -575,18 +621,18 @@ function render(){
   const m=mercado.value;
 
   if(aba==='FT'){
-    tituloA.textContent=`${labels[m]} (FT)`;
-    tituloB.textContent='Info';
+    tituloA.textContent=`${labels[m]} [FULL TIME]`;
+    tituloB.textContent='INFO';
     const l=[...dados].sort((a,b)=>b.FT[m]-a.FT[m]);
     const max=Math.max(...l.map(d=>+d.FT[m]));
     l.forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT[m],max,m==='mediaGols'));
-    rankingB.innerHTML='<div class="note">Selecione HT x FT para ver comparativos detalhados.</div>';
+    rankingB.innerHTML='<div class="note">MODO TEMPO REAL SELECIONADO</div>';
   }
 
   if(aba==='HTFT'){
     const l=dados.filter(d=>d.ht);
-    tituloA.textContent=`${labels[m]} (1º Tempo)`;
-    tituloB.textContent=`${labels[m]} (Final)`;
+    tituloA.textContent=`${labels[m]} [1º TEMPO]`;
+    tituloB.textContent=`${labels[m]} [FINAL]`;
     const maxHT=Math.max(...l.map(d=>+d.HT[m]));
     const maxFT=Math.max(...l.map(d=>+d.FT[m]));
     [...l].sort((a,b)=>b.HT[m]-a.HT[m]).forEach(d=>rankingA.innerHTML+=row(d.nome,d.HT[m],maxHT,m==='mediaGols'));
@@ -594,19 +640,17 @@ function render(){
   }
 
   if(aba==='MV'){
-    tituloA.textContent='Mandante (FT)';
-    tituloB.textContent='Visitante (FT)';
+    tituloA.textContent='CASA [FT]';
+    tituloB.textContent='FORA [FT]';
     const maxA=Math.max(...dados.map(d=>+d.FT.vitoriasMandante));
     const maxB=Math.max(...dados.map(d=>+d.FT.vitoriasVisitante));
     [...dados].sort((a,b)=>b.FT.vitoriasMandante-a.FT.vitoriasMandante).forEach(d=>rankingA.innerHTML+=row(d.nome,d.FT.vitoriasMandante,maxA,false));
     [...dados].sort((a,b)=>b.FT.vitoriasVisitante-a.FT.vitoriasVisitante).forEach(d=>rankingB.innerHTML+=row(d.nome,d.FT.vitoriasVisitante,maxB,false));
   }
-
+  
   setTimeout(()=>{
-    document.querySelectorAll('.fill').forEach(el=>{
-      el.style.width = el.getAttribute('data-width');
-    });
-  }, 50);
+    document.querySelectorAll('.fill').forEach(el=> el.style.width = el.getAttribute('data-width'));
+  }, 100);
 }
 
 function row(nome,val,max,isMedia){
@@ -617,7 +661,7 @@ function row(nome,val,max,isMedia){
     <div class="bar-container">
       <div class="fill" data-width="${widthPct}%"></div>
     </div>
-    <div class="value">${isMedia?val:Math.round(val)+'<small>%</small>'}</div>
+    <div class="value">${isMedia?val:Math.round(val)+'%'}</div>
   </div>`;
 }
 
@@ -633,15 +677,11 @@ mercado.onchange=render;
 
 function alternarTema(){
   const body = document.body;
-  const btn = document.querySelector('.theme-btn');
   const isDark = body.dataset.theme === 'dark';
   body.dataset.theme = isDark ? 'light' : 'dark';
-  btn.textContent = isDark ? '🌙' : '☀';
 }
 
-// Inicialização
 iniciarApp();
 </script>
-
 </body>
 </html>
