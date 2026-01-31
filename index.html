@@ -503,9 +503,8 @@ async function baixarDadosRede() {
   dados = [];
   try {
     for(const k in ligas){
-      const csv = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(ligas[k].url))
-        .then(r => { if(!r.ok) throw new Error('Erro'); return r.text(); });
-      
+      const csv = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(ligas[k].url))
+        .then(r => { if(!r.ok) throw new Error('Erro Proxy'); return r.text(); });
       const rows = Papa.parse(csv,{header:true}).data;
       dados.push(calc(rows,ligas[k]));
     }
