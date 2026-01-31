@@ -503,8 +503,12 @@ async function baixarDadosRede() {
   dados = [];
   try {
     for(const k in ligas){
-      const csv = await fetch('https://corsproxy.io/?' + encodeURIComponent(ligas[k].url))
+      // --- ALTERAÇÃO AQUI ---
+      // Trocamos corsproxy.io por api.allorigins.win/raw
+      const csv = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(ligas[k].url))
         .then(r => { if(!r.ok) throw new Error('Erro'); return r.text(); });
+      // ----------------------
+      
       const rows = Papa.parse(csv,{header:true}).data;
       dados.push(calc(rows,ligas[k]));
     }
@@ -514,15 +518,6 @@ async function baixarDadosRede() {
     mostrarToast("DADOS ATUALIZADOS");
   } catch(e) {
     console.error(e);
-    const cacheAntigo = localStorage.getItem(CACHE_KEY);
-    if(cacheAntigo){
-      const json = JSON.parse(cacheAntigo);
-      dados = json.data;
-      finalizarCarregamento(json.timestamp);
-      mostrarToast("OFFLINE MODE");
-    } else {
-      alert("ERRO: SEM CONEXÃO");
-    }
   }
 }
 
